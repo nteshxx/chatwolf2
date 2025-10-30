@@ -1,0 +1,113 @@
+Prioritized build plan (what we should build & test in order)
+
+Local MVP (fast) — Socket server + Redis (pub/sub) + Postgres + simple API + React client. (Docker Compose)
+
+Durability & worker — Add broker (Redis Streams or Kafka) + Message Processor that persists and assigns seq_no.
+
+Presence & unread counters — Redis-based presence, last-seen, unread counters.
+
+Attachments — MinIO + presigned upload flow.
+
+Scaling & redis-adapter — Replace pub/sub with Socket.IO Redis Adapter (or equivalent), run multiple socket replicas.
+
+Observability — Prometheus, Grafana, structured logs.
+
+Kubernetes — Move stack to Minikube/Kind. Add HPA, resource requests/limits, and ingress.
+
+Production hardening — Backups, security, chaos tests, canary deploys.
+
+Optional: Migrate broker to Kafka and DB to Cassandra (if needed).
+
+
+
+APIs & socket events (reference)
+
+REST endpoints (examples):
+
+POST /auth/login → returns JWT
+
+POST /conversations → create conversation
+
+GET /conversations/:id/messages?limit=&since_seq= → history page
+
+POST /attachments/presign → get presigned URL
+
+GET /health GET /metrics
+
+Socket events:
+
+Client -> Server:
+
+connect (handshake with token)
+
+message.send { convo_id, client_msg_id, content }
+
+message.read { convo_id, seq_no }
+
+typing.start / typing.stop
+
+presence.subscribe
+
+Server -> Client:
+
+message.create (with server message_id & seq_no)
+
+message.delivery (delivery status)
+
+message.read (update)
+
+presence.update
+
+system.notice
+
+Idempotency & ACKs:
+
+Clients provide client_msg_id (UUID) to dedupe retries.
+
+Server acks with { status, server_msg_id, seq_no }.
+
+
+
+| Source            | Target               | Type         | Description             |
+| ----------------- | -------------------- | ------------ | ----------------------- |
+| Client            | Socket Service       | WebSocket    | Real-time events        |
+| Client            | API Service          | REST         | Auth, history, metadata |
+| Socket Service    | Broker               | Publish      | message.create          |
+| Broker            | Message Processor    | Consume      | message.create          |
+| Message Processor | DB                   | Direct Write | Persist message         |
+| Message Processor | Broker               | Publish      | message.deliver         |
+| Broker            | Socket Service       | Consume      | message.deliver         |
+| Socket Service    | Client               | WebSocket    | Deliver message         |
+| Message Processor | Notification Service | Publish      | push events             |
+| Auth Service      | API/Socket           | REST         | JWT validation          |
+
+
+
+
+| Component            | Docker Image        | Ports     | Role                       |
+| -------------------- | ------------------- | --------- | -------------------------- |
+| PostgreSQL           | `postgres:16`       | 5432      | Persistent data            |
+| Redis                | `redis:7`           | 6379      | Cache, pub/sub, rate limit |
+| MinIO                | `minio/minio`       | 9000/9001 | Attachment storage         |
+| Kafka (optional)     | `bitnami/kafka`     | 9092      | Message broker             |
+| Zookeeper (if Kafka) | `bitnami/zookeeper` | 2181      | Kafka dependency           |
+| Prometheus           | `prom/prometheus`   | 9090      | Metrics                    |
+| Grafana              | `grafana/grafana`   | 3000      | Dashboards                 |
+
+
+
+
+| #  | Service                                   | Responsibility             | Scale    |
+| -- | ----------------------------------------- | -------------------------- | -------- |
+| 1  | API Gateway / Ingress                     | Routing, TLS, auth headers | Low      |
+| 2  | Socket Service                            | Real-time communication    | High     |
+| 3  | API Service                               | REST API, CRUD, history    | Medium   |
+| 4  | Auth Service                              | Login, JWT, refresh        | Medium   |
+| 5  | Message Processor                         | Async message persistence  | High     |
+| 6  | Database Service                          | Persistent store           | Medium   |
+| 7  | Attachment Service                        | File uploads               | Low      |
+| 8  | Notification Service                      | Push notifications         | Medium   |
+| 9  | Presence Service                          | Ephemeral state            | Medium   |
+| 10 | Search Service                            | Text search                | Optional |
+| 11 | Analytics Service                         | Metrics & audit logs       | Optional |
+| 12 | Infra Components (Redis, DB, MinIO, etc.) | Support layer              | Shared   |
