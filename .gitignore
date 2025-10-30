@@ -1,70 +1,38 @@
-# Eclipse / STS
-.metadata/
+HELP.md
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### STS ###
+.apt_generated
 .classpath
+.factorypath
 .project
-.settings/
-.springBeans/
+.settings
+.springBeans
+.sts4-cache
+.metadata/
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
 
-# VS Code
-.vscode/
-.vscode-test/
-
-# IntelliJ
-.idea/
+### IntelliJ IDEA ###
+.idea
+*.iws
 *.iml
-
-# Gradle
-.gradle/
-**/build/
-!/gradle/wrapper/gradle-wrapper.jar
-
-# Java / Build artifacts
-*.class
-*.jar
-*.war
-*.ear
-/*.log
-hs_err_pid*
-
-# Spring / secrets / keystores
-*.jks
-*.keystore
-*.p12
-*.pem
-*.key
-
-# Logs and runtime files
-logs/
-*.log
-
-# Node / Next.js (frontend)
-node_modules/
-.next/
+*.ipr
 out/
-npm-debug.log*
-yarn-error.log*
-yarn-debug.log*
-.pnp.*
-.cache/
+!**/src/main/**/out/
+!**/src/test/**/out/
 
-# Environment files (local overrides, do NOT ignore env example files)
-.env
-.env.*.local
-.env.local
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
 
-# Docker local overrides
-docker-compose.override.yml
-
-# Test / coverage reports
-coverage/
-test-results/
-reports/
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Misc IDE / tooling
-*.log
-.idea/
-*.iml
+### VS Code ###
+.vscode/
