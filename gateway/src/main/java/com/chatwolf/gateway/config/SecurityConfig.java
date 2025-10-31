@@ -8,7 +8,7 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 
 @Configuration
 @EnableWebFluxSecurity
-class SecurityConfig {
+public class SecurityConfig {
 
     @Bean
     SecurityWebFilterChain filterChain(ServerHttpSecurity http) {
@@ -19,7 +19,6 @@ class SecurityConfig {
                         .pathMatchers("/actuator/health", "/health", "/metrics", "/prometheus").permitAll()
                         .anyExchange().authenticated()
                 )
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {}))
                 .build();
     }
     

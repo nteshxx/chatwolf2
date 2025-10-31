@@ -1,21 +1,23 @@
 package com.chatwolf.gateway.config;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.web.authentication.AuthenticationFilter;
-
-import com.chatwolf.gateway.utility.JwtTokenProvider;
+import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver;
+import org.springframework.cloud.gateway.filter.ratelimit.RedisRateLimiter;
 
 @Configuration
 public class RouteConfig {
 	
 	private final GatewayFilter authenticationFilter;
+	private final KeyResolver userKeyResolver;
 
-    public RouteConfig(GatewayFilter authenticationFilter) {
+    public RouteConfig(GatewayFilter authenticationFilter, @Qualifier("UserKeyResolver") KeyResolver userKeyResolver) {
         this.authenticationFilter = authenticationFilter;
+        this.userKeyResolver = userKeyResolver;
     }
 	
     @Bean
@@ -32,7 +34,7 @@ public class RouteConfig {
                         .filters(f -> f
                                 .filter(authenticationFilter)
                                 .requestRateLimiter(config -> {
-                                    config.setKeyResolver(new UserKeyResolver());
+                                    config.setKeyResolver(userKeyResolver);
                                     config.setRateLimiter(new RedisRateLimiter(100, 200));
                                 }))
                         .uri("http://user-service:8002"))
@@ -43,7 +45,7 @@ public class RouteConfig {
                         .filters(f -> f
                                 .filter(authenticationFilter)
                                 .requestRateLimiter(config -> {
-                                    config.setKeyResolver(new UserKeyResolver());
+                                    config.setKeyResolver(userKeyResolver);
                                     config.setRateLimiter(new RedisRateLimiter(50, 100));
                                 }))
                         .uri("http://user-service:8002"))
@@ -53,7 +55,7 @@ public class RouteConfig {
                         .filters(f -> f
                                 .filter(authenticationFilter)
                                 .requestRateLimiter(config -> {
-                                    config.setKeyResolver(new UserKeyResolver());
+                                    config.setKeyResolver(userKeyResolver);
                                     config.setRateLimiter(new RedisRateLimiter(100, 200));
                                 }))
                         .uri("http://user-service:8002"))
@@ -63,7 +65,7 @@ public class RouteConfig {
                         .filters(f -> f
                                 .filter(authenticationFilter)
                                 .requestRateLimiter(config -> {
-                                    config.setKeyResolver(new UserKeyResolver());
+                                    config.setKeyResolver(userKeyResolver);
                                     config.setRateLimiter(new RedisRateLimiter(100, 200));
                                 }))
                         .uri("http://user-service:8002"))
@@ -74,7 +76,7 @@ public class RouteConfig {
                         .filters(f -> f
                                 .filter(authenticationFilter)
                                 .requestRateLimiter(config -> {
-                                    config.setKeyResolver(new UserKeyResolver());
+                                    config.setKeyResolver(userKeyResolver);
                                     config.setRateLimiter(new RedisRateLimiter(50, 100));
                                 }))
                         .uri("http://user-service:8002"))
@@ -84,7 +86,7 @@ public class RouteConfig {
                         .filters(f -> f
                                 .filter(authenticationFilter)
                                 .requestRateLimiter(config -> {
-                                    config.setKeyResolver(new UserKeyResolver());
+                                    config.setKeyResolver(userKeyResolver);
                                     config.setRateLimiter(new RedisRateLimiter(500, 1000));
                                 }))
                         .uri("http://user-service:8002"))
@@ -96,7 +98,7 @@ public class RouteConfig {
                         .filters(f -> f
                                 .filter(authenticationFilter)
                                 .requestRateLimiter(config -> {
-                                    config.setKeyResolver(new UserKeyResolver());
+                                    config.setKeyResolver(userKeyResolver);
                                     config.setRateLimiter(new RedisRateLimiter(50, 100));
                                 }))
                         .uri("http://chat-service:8003"))
@@ -106,7 +108,7 @@ public class RouteConfig {
                         .filters(f -> f
                                 .filter(authenticationFilter)
                                 .requestRateLimiter(config -> {
-                                    config.setKeyResolver(new UserKeyResolver());
+                                    config.setKeyResolver(userKeyResolver);
                                     config.setRateLimiter(new RedisRateLimiter(1000, 2000));
                                 }))
                         .uri("ws://chat-service:8003"))
@@ -116,7 +118,7 @@ public class RouteConfig {
                         .filters(f -> f
                                 .filter(authenticationFilter)
                                 .requestRateLimiter(config -> {
-                                    config.setKeyResolver(new UserKeyResolver());
+                                    config.setKeyResolver(userKeyResolver);
                                     config.setRateLimiter(new RedisRateLimiter(100, 200));
                                 }))
                         .uri("http://chat-service:8003"))
@@ -126,7 +128,7 @@ public class RouteConfig {
                         .filters(f -> f
                                 .filter(authenticationFilter)
                                 .requestRateLimiter(config -> {
-                                    config.setKeyResolver(new UserKeyResolver());
+                                    config.setKeyResolver(userKeyResolver);
                                     config.setRateLimiter(new RedisRateLimiter(100, 200));
                                 }))
                         .uri("http://chat-service:8003"))
@@ -138,7 +140,7 @@ public class RouteConfig {
                         .filters(f -> f
                                 .filter(authenticationFilter)
                                 .requestRateLimiter(config -> {
-                                    config.setKeyResolver(new UserKeyResolver());
+                                    config.setKeyResolver(userKeyResolver);
                                     config.setRateLimiter(new RedisRateLimiter(300, 600));
                                 }))
                         .uri("http://message-service:8004"))
@@ -148,7 +150,7 @@ public class RouteConfig {
                         .filters(f -> f
                                 .filter(authenticationFilter)
                                 .requestRateLimiter(config -> {
-                                    config.setKeyResolver(new UserKeyResolver());
+                                    config.setKeyResolver(userKeyResolver);
                                     config.setRateLimiter(new RedisRateLimiter(100, 200));
                                 }))
                         .uri("http://message-service:8004"))
@@ -158,7 +160,7 @@ public class RouteConfig {
                         .filters(f -> f
                                 .filter(authenticationFilter)
                                 .requestRateLimiter(config -> {
-                                    config.setKeyResolver(new UserKeyResolver());
+                                    config.setKeyResolver(userKeyResolver);
                                     config.setRateLimiter(new RedisRateLimiter(50, 100));
                                 }))
                         .uri("http://message-service:8004"))
@@ -169,7 +171,7 @@ public class RouteConfig {
                         .filters(f -> f
                                 .filter(authenticationFilter)
                                 .requestRateLimiter(config -> {
-                                    config.setKeyResolver(new UserKeyResolver());
+                                    config.setKeyResolver(userKeyResolver);
                                     config.setRateLimiter(new RedisRateLimiter(100, 200));
                                 }))
                         .uri("http://message-service:8004"))
@@ -180,7 +182,7 @@ public class RouteConfig {
                         .filters(f -> f
                                 .filter(authenticationFilter)
                                 .requestRateLimiter(config -> {
-                                    config.setKeyResolver(new UserKeyResolver());
+                                    config.setKeyResolver(userKeyResolver);
                                     config.setRateLimiter(new RedisRateLimiter(100, 200));
                                 }))
                         .uri("http://message-service:8004"))
@@ -190,7 +192,7 @@ public class RouteConfig {
                         .filters(f -> f
                                 .filter(authenticationFilter)
                                 .requestRateLimiter(config -> {
-                                    config.setKeyResolver(new UserKeyResolver());
+                                    config.setKeyResolver(userKeyResolver);
                                     config.setRateLimiter(new RedisRateLimiter(200, 400));
                                 }))
                         .uri("http://message-service:8004"))

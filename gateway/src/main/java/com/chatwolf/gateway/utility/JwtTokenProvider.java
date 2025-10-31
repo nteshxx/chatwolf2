@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class JwtTokenProvider {
 
-    @Value("${jwt.secret:my-super-secret-key-that-needs-to-be-at-least-32-characters-long}")
+	@Value("${jwt.secret}")
     private String jwtSecret;
 
     private Algorithm getAlgorithm() {
