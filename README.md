@@ -83,23 +83,23 @@ Server acks with { status, server_msg_id, seq_no }.
 
 
 
-
+----------------------------------------------------
 | Component            | Docker Image        | Ports     | Role                       |
 | -------------------- | ------------------- | --------- | -------------------------- |
-| PostgreSQL           | `postgres:16`       | 5432      | Persistent data            |
-| Redis                | `redis:7`           | 6379      | Cache, pub/sub, rate limit |
-| MinIO                | `minio/minio`       | 9000/9001 | Attachment storage         |
-| Kafka (optional)     | `bitnami/kafka`     | 9092      | Message broker             |
-| Zookeeper (if Kafka) | `bitnami/zookeeper` | 2181      | Kafka dependency           |
-| Prometheus           | `prom/prometheus`   | 9090      | Metrics                    |
-| Grafana              | `grafana/grafana`   | 3000      | Dashboards                 |
+| PostgreSQL           | `postgres:16`       | 5432      | Persistent data            | done
+| Redis                | `redis:7`           | 6379      | Cache, pub/sub, rate limit | done
+| MinIO                | `minio/minio`       | 9000/9001 | Attachment storage         | done
+| Kafka (optional)     | `bitnami/kafka`     | 9092      | Message broker             | done
+| Zookeeper (if Kafka) | `bitnami/zookeeper` | 2181      | Kafka dependency           | done
+| Prometheus           | `prom/prometheus`   | 9090      | Metrics                    | done
+| Grafana              | `grafana/grafana`   | 3000      | Dashboards                 | done
 
 
 
 
 | #  | Service                                   | Responsibility             | Scale    |
 | -- | ----------------------------------------- | -------------------------- | -------- |
-| 1  | API Gateway / Ingress                     | Routing, TLS, auth headers | Low      |
+| 1  | API Gateway / Ingress                     | Routing, TLS, auth headers | Low      | done
 | 2  | Socket Service                            | Real-time communication    | High     |
 | 3  | API Service                               | REST API, CRUD, history    | Medium   |
 | 4  | Auth Service                              | Login, JWT, refresh        | Medium   |
@@ -110,4 +110,4 @@ Server acks with { status, server_msg_id, seq_no }.
 | 9  | Presence Service                          | Ephemeral state            | Medium   |
 | 10 | Search Service                            | Text search                | Optional |
 | 11 | Analytics Service                         | Metrics & audit logs       | Optional |
-| 12 | Infra Components (Redis, DB, MinIO, etc.) | Support layer              | Shared   |
+| 12 | Infra Components (Redis, DB, MinIO, etc.) | Support layer              | Shared   | done

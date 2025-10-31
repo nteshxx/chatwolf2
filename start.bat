@@ -7,7 +7,7 @@ title Chatwolf Messaging App Startup
 REM ==============================================================
 REM   Configuration
 REM ==============================================================
-set "LOG_DIR=%~dp0logs"
+set "LOG_DIR=%~dp0logs\startup"
 set "LOG_FILE=%LOG_DIR%\startup_%date:~-4,4%%date:~-10,2%%date:~-7,2%_%time:~0,2%%time:~3,2%%time:~6,2%.log"
 set "LOG_FILE=%LOG_FILE: =0%"
 

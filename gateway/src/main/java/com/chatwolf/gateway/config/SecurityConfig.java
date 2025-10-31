@@ -12,14 +12,13 @@ public class SecurityConfig {
 
     @Bean
     SecurityWebFilterChain filterChain(ServerHttpSecurity http) {
-        return http
-                .csrf(csrf -> csrf.disable())
-                .authorizeExchange(auth -> auth
-                        .pathMatchers("/api/v1/auth/**").permitAll()
-                        .pathMatchers("/actuator/health", "/health", "/metrics", "/prometheus").permitAll()
-                        .anyExchange().authenticated()
-                )
+        return http.csrf(csrf -> csrf.disable())
+                .authorizeExchange(auth -> auth.pathMatchers("/api/v1/auth/**")
+                        .permitAll()
+                        .pathMatchers("/actuator/health", "/health", "/metrics", "/prometheus")
+                        .permitAll()
+                        .anyExchange()
+                        .authenticated())
                 .build();
     }
-    
 }

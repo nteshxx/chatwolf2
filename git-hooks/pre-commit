@@ -1,0 +1,64 @@
+#!/bin/sh
+# .git/hooks/pre-commit
+
+echo "🔍 Running Spotless on microservices..."
+
+# Configuration
+ROOT_DIR=$(git rev-parse --show-toplevel)
+SERVICES_DIR="$ROOT_DIR"  # Adjust if services are in a subdirectory like "services/"
+
+# Get changed files
+CHANGED_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\.java$')
+
+if [ -z "$CHANGED_FILES" ]; then
+    echo "No Java files changed."
+    exit 0
+fi
+
+# Extract unique service directories
+SERVICES=$(echo "$CHANGED_FILES" | cut -d'/' -f1 | sort -u)
+
+FAILED=0
+
+for service in $SERVICES; do
+    SERVICE_PATH="$SERVICES_DIR/$service"
+    
+    # Check if it's a gradle project
+    if [ -f "$SERVICE_PATH/build.gradle" ] || [ -f "$SERVICE_PATH/build.gradle.kts" ]; then
+        echo "📦 Formatting $service..."
+        
+        # Determine which gradle wrapper to use
+        if [ -f "$SERVICE_PATH/gradlew" ]; then
+            cd "$SERVICE_PATH"
+            ./gradlew spotlessApply
+            RESULT=$?
+            cd "$ROOT_DIR"
+        elif [ -f "$ROOT_DIR/gradlew" ]; then
+            ./gradlew :$service:spotlessApply
+            RESULT=$?
+        else
+            echo "⚠️  No gradlew found for $service, skipping..."
+            continue
+        fi
+        
+        if [ $RESULT -ne 0 ]; then
+            echo "❌ Spotless failed for $service"
+            FAILED=1
+        else
+            echo "✅ $service formatted successfully"
+        fi
+    fi
+done
+
+if [ $FAILED -eq 1 ]; then
+    echo ""
+    echo "❌ Spotless formatting failed for one or more services!"
+    exit 1
+fi
+
+# Stage all formatted files
+git add -A
+
+echo ""
+echo "✅ All services formatted successfully!"
+exit 0
