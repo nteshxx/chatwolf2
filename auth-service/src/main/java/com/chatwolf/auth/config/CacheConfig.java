@@ -1,4 +1,4 @@
-package com.chatwolf.eureka.cache;
+package com.chatwolf.auth.config;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import java.util.concurrent.TimeUnit;
@@ -16,5 +16,4 @@ public class CacheConfig {
                 Caffeine.newBuilder().initialCapacity(100).maximumSize(500).expireAfterWrite(10, TimeUnit.MINUTES));
         return cacheManager;
     }
-    
 }
