@@ -228,11 +228,6 @@ for /f "tokens=1" %%a in ('tasklist /FI "PID eq %PID%" /NH /FO CSV') do (
 
 echo Process: !PROCESS_NAME! (PID: %PID%)
 
-REM Close associated CMD windows first
-call :log "Closing CMD windows associated with PID %PID%"
-echo Closing associated CMD windows...
-call :closeCmdWindows %PID%
-
 REM Try graceful shutdown
 echo Attempting graceful shutdown...
 call :log "Attempting graceful shutdown of PID %PID%"
@@ -269,75 +264,6 @@ if %ERRORLEVEL% neq 0 (
     endlocal & exit /b 1
 )
 
-REM ==============================================================
-REM   Function: Close CMD Windows Associated with Process
-REM ==============================================================
-:closeCmdWindows
-@echo off
-setlocal enabledelayedexpansion
-
-REM ---- Input Validation ----
-set "TARGET_PID=%~1"
-if "%TARGET_PID%"=="" (
-    echo Error: No PID specified
-    echo Usage: %~nx0 ^<PID^>
-    endlocal & exit /b 1
-)
-
-REM Validate PID is numeric
-echo %TARGET_PID%| findstr /r "^[0-9][0-9]*$" >nul
-if errorlevel 1 (
-    echo Error: PID must be numeric
-    endlocal & exit /b 1
-)
-
-call :log "Searching for CMD windows hosting PID %TARGET_PID%"
-
-REM ---- Method 1: Find by Parent-Child Relationship ----
-call :log "Method 1: Checking parent-child relationships..."
-set "FOUND_COUNT=0"
-
-for /f "tokens=2 delims=:" %%p in ('tasklist /FI "IMAGENAME eq cmd.exe" /FO LIST 2^>nul ^| findstr /i "^PID:"') do (
-    set "CMD_PID=%%p"
-    REM Trim leading/trailing spaces
-    for /f "tokens=* delims= " %%a in ("!CMD_PID!") do set "CMD_PID=%%a"
-    
-    if not "!CMD_PID!"=="" (
-        REM Check if this CMD has the target PID as a child
-        for /f "tokens=*" %%c in ('wmic process where "ParentProcessId=!CMD_PID!" get ProcessId 2^>nul ^| findstr /r "^[0-9]"') do (
-            set "CHILD_PID=%%c"
-            REM Trim spaces
-            for /f "tokens=* delims= " %%a in ("!CHILD_PID!") do set "CHILD_PID=%%a"
-            
-            if "!CHILD_PID!"=="%TARGET_PID%" (
-                call :log "Found CMD window PID !CMD_PID! hosting target process %TARGET_PID%"
-                call :killProcess !CMD_PID!
-                set /a FOUND_COUNT+=1
-            )
-        )
-    )
-)
-
-REM ---- Method 2: Find by Window Title ----
-call :log "Method 2: Checking window titles for 'Eureka Gateway'..."
-
-for /f "skip=3 tokens=2,8*" %%a in ('tasklist /V /FI "IMAGENAME eq cmd.exe" /FI "STATUS eq Running" 2^>nul') do (
-    set "CMD_PID=%%a"
-    set "WIN_TITLE=%%b %%c"
-    
-    REM Trim spaces from PID
-    for /f "tokens=* delims= " %%x in ("!CMD_PID!") do set "CMD_PID=%%x"
-    
-    if not "!CMD_PID!"=="" if not "!WIN_TITLE!"=="N/A" (
-        echo !WIN_TITLE! | findstr /i "Eureka Gateway" >nul 2>&1
-        if !errorlevel! equ 0 (
-            call :log "Found service CMD window by title: !WIN_TITLE! (PID !CMD_PID!)"
-            call :killProcess !CMD_PID!
-            set /a FOUND_COUNT+=1
-        )
-    )
-)
-
 REM ---- Summary ----
 if !FOUND_COUNT! equ 0 (
     call :log "No CMD windows found for PID %TARGET_PID%"
@@ -346,47 +272,6 @@ if !FOUND_COUNT! equ 0 (
     call :log "Successfully processed !FOUND_COUNT! CMD window(s)"
     endlocal & exit /b 0
 )
-
-REM ========================================
-REM Subroutine: Kill Process Gracefully
-REM ========================================
-:killProcess
-set "PID=%~1"
-if "%PID%"=="" exit /b 1
-
-call :log "Attempting to close CMD window PID %PID%..."
-
-REM First, try graceful termination
-taskkill /PID %PID% >nul 2>&1
-if errorlevel 1 (
-    call :log "Warning: taskkill failed for PID %PID% (may already be closed)"
-    exit /b 0
-)
-
-REM Wait briefly for graceful shutdown
-timeout /t 1 /nobreak >nul
-
-REM Check if process still exists
-tasklist /FI "PID eq %PID%" 2>nul | findstr /i "\<%PID%\>" >nul
-if errorlevel 1 (
-    call :log "CMD window PID %PID% closed gracefully"
-    exit /b 0
-)
-
-REM Force kill if still running
-call :log "Process still running, forcing termination of PID %PID%..."
-taskkill /F /PID %PID% >nul 2>&1
-
-REM Final verification
-timeout /t 1 /nobreak >nul
-tasklist /FI "PID eq %PID%" 2>nul | findstr /i "\<%PID%\>" >nul
-if errorlevel 1 (
-    call :log "CMD window PID %PID% forcefully terminated"
-) else (
-    call :log "ERROR: Failed to terminate PID %PID%"
-)
-
-exit /b 0
 
 REM ==============================================================
 REM   Function: Stop Redis Container

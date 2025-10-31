@@ -249,7 +249,10 @@ call :log "Launching %SERVICE_NAME%..."
 echo Starting %SERVICE_NAME%...
 
 REM Start the service in a new window
-start "%SERVICE_NAME%" cmd /k "echo Starting %SERVICE_NAME%... && gradlew.bat bootRun || (echo [ERROR] Failed to start && pause)"
+REM start "%SERVICE_NAME%" cmd /k "echo Starting %SERVICE_NAME%... && gradlew.bat bootRun || (echo [ERROR] Failed to start && pause)"
+
+REM Start service in background without new window
+start /B "" gradlew.bat bootRun > "%SERVICE_NAME%.log" 2>&1
 
 REM Wait for service to become healthy
 call :log "Waiting for %SERVICE_NAME% to become healthy (timeout: %TIMEOUT%s)..."
