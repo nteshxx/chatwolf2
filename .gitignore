@@ -35,8 +35,12 @@ out/
 logs/
 
 ### Environment files ###
+.env
 .env.*
 !.env.example
 
 ### Node modules ###
 node_modules/
+
+### Grafana ###
+grafana-dashboards/
