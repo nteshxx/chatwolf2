@@ -1,89 +1,83 @@
-Prioritized build plan (what we should build & test in order)
-
-Local MVP (fast) — Socket server + Redis (pub/sub) + Postgres + simple API + React client. (Docker Compose)
-
-Durability & worker — Add broker (Redis Streams or Kafka) + Message Processor that persists and assigns seq_no.
-
-Presence & unread counters — Redis-based presence, last-seen, unread counters.
-
-Attachments — MinIO + presigned upload flow.
-
-Scaling & redis-adapter — Replace pub/sub with Socket.IO Redis Adapter (or equivalent), run multiple socket replicas.
-
-Observability — Prometheus, Grafana, structured logs.
-
-Kubernetes — Move stack to Minikube/Kind. Add HPA, resource requests/limits, and ingress.
-
-Production hardening — Backups, security, chaos tests, canary deploys.
-
-Optional: Migrate broker to Kafka and DB to Cassandra (if needed).
+High Level Design:
 
 
-
-APIs & socket events (reference)
-
-REST endpoints (examples):
-
-POST /auth/login → returns JWT
-
-POST /conversations → create conversation
-
-GET /conversations/:id/messages?limit=&since_seq= → history page
-
-POST /attachments/presign → get presigned URL
-
-GET /health GET /metrics
-
-Socket events:
-
-Client -> Server:
-
-connect (handshake with token)
-
-message.send { convo_id, client_msg_id, content }
-
-message.read { convo_id, seq_no }
-
-typing.start / typing.stop
-
-presence.subscribe
-
-Server -> Client:
-
-message.create (with server message_id & seq_no)
-
-message.delivery (delivery status)
-
-message.read (update)
-
-presence.update
-
-system.notice
-
-Idempotency & ACKs:
-
-Clients provide client_msg_id (UUID) to dedupe retries.
-
-Server acks with { status, server_msg_id, seq_no }.
+                     ┌──────────────────┐
+                     │  React Frontend  │
+                     └───────┬──────────┘
+                             │
+                     ┌───────▼──────────┐
+                     │  API Gateway     │
+                     │ (Spring Cloud)   │
+                     └───────┬──────────┘
+                             │
+        ┌────────────────────┼──────────────────────────────────────────────┐
+        │                    │                      │                       │
+ ┌──────▼──────┐    ┌────────▼────────┐     ┌───────▼────────┐      ┌───────▼────────┐
+ │Auth Service │    │ API Service     │     │ Socket Service │      │ Presence Svc   │
+ │ (JWT + User)│    │ (REST + DB)     │     │ (Go + WS)      │      │ (Redis + Kafka)│
+ └──────┬──────┘    └────────┬────────┘     └────────┬───────┘      └───────┬────────┘
+        │                    │                       │                      │
+        │                    │                       │                      │
+        │                    │                       │                      │
+        │                    │                       │                      │
+        │                    │                       │                      │
+        │                    ▼                       ▼                      ▼
+        │        ┌────────────────────────────┐      │                      │
+        │        │  Message Consumer Svc      │◄─────┘                      │
+        │        │  (Kafka → PostgreSQL)      │                             │
+        │        └─────────┬──────────────────┘                             │
+        │                  │                                                │
+        │          ┌───────▼────────┐                                       │
+        │          │ Storage Svc    │                                       │
+        │          │ (MinIO + REST) │                                       │
+        │          └───────┬────────┘                                       │
+        │                  │                                                │
+        │          ┌───────▼────────┐                                       │
+        │          │ Notification   │                                       │
+        │          │ Service (Mail, │                                       │
+        │          │ SMS via Kafka) │                                       │
+        │          └───────┬────────┘                                       │
+        │                  │                                                │
+        │          ┌───────▼────────┐                                       │
+        │          │ Search Service │                                       │
+        │          │ (Elasticsearch)│                                       │
+        │          └────────────────┘                                       │
+        │                                                                   │
+        ▼                                                                   │
+ ┌───────────────────────────┐                                              │
+ │ Eureka Server (Discovery) │◄─────────────────────────────────────────────┘ 
+ └────────────┬──────────────┘
+              ▼
+ ┌────────────────────────┐
+ │ Observability Stack    │
+ │ Prometheus + Grafana + │
+ │ Zipkin + Micrometer    │
+ └────────────────────────┘
 
 
 
-| Source            | Target               | Type         | Description             |
-| ----------------- | -------------------- | ------------ | ----------------------- |
-| Client            | Socket Service       | WebSocket    | Real-time events        |
-| Client            | API Service          | REST         | Auth, history, metadata |
-| Socket Service    | Broker               | Publish      | message.create          |
-| Broker            | Message Processor    | Consume      | message.create          |
-| Message Processor | DB                   | Direct Write | Persist message         |
-| Message Processor | Broker               | Publish      | message.deliver         |
-| Broker            | Socket Service       | Consume      | message.deliver         |
-| Socket Service    | Client               | WebSocket    | Deliver message         |
-| Message Processor | Notification Service | Publish      | push events             |
-| Auth Service      | API/Socket           | REST         | JWT validation          |
+Services
+
+| #    | Service                      | Purpose                      | Status          |
+|------| ---------------------------- | ---------------------------- | --------------- |
+| 1️    | **Eureka Server**            | Service Discovery            | ✅ Done         |
+| 2️    | **API Gateway**              | Entry point                  | ✅ Done         |
+| 3    | **Auth Service**             | Authentication & JWT         | ✅ Done         |
+| 4️    | **API Service**              | Core REST APIs               | ✅ Done         |
+| 5️    | **Socket Service (Go)**      | Real-time messaging          | ✅ Done         |
+| 6️    | **Message Consumer Service** | Persist messages from Kafka  | 🚧 In Progress  |
+| 7️    | **Presence Service**         | Manage online status         | ⏳ Pending      |
+| 8️    | **Storage Service**          | File uploads to MinIO        | 🆕 Pending      |
+| 9️    | **Notification Service**     | Email/SMS notifications      | 🆕 Pending      |
+| 10   | **Search Service**           | Elasticsearch message search | 🆕 Pending      |
+| 1️1   | **PostgreSQL DB**            | Persistent store             | ✅ Done         |
+| 1️2   | **Kafka**                    | Event backbone               | ✅ Done         |
+| 1️3   | **Grafana**                  | Monitoring + tracing         | 🧩 To Integrate |
 
 
+Docker
 
-----------------------------------------------------
+---------------------------------------------------------------------------------------
 | Component            | Docker Image        | Ports     | Role                       |
 | -------------------- | ------------------- | --------- | -------------------------- |
 | PostgreSQL           | `postgres:16`       | 5432      | Persistent data            | done
@@ -96,18 +90,19 @@ Server acks with { status, server_msg_id, seq_no }.
 
 
 
+Deliverables:
 
-| #  | Service                                   | Responsibility             | Scale    |
-| -- | ----------------------------------------- | -------------------------- | -------- |
-| 1  | API Gateway / Ingress                     | Routing, TLS, auth headers | Low      | done
-| 2  | Socket Service                            | Real-time communication    | High     |
-| 3  | API Service                               | REST API, CRUD, history    | Medium   |
-| 4  | Auth Service                              | Login, JWT, refresh        | Medium   |
-| 5  | Message Processor                         | Async message persistence  | High     |
-| 6  | Database Service                          | Persistent store           | Medium   |
-| 7  | Attachment Service                        | File uploads               | Low      |
-| 8  | Notification Service                      | Push notifications         | Medium   |
-| 9  | Presence Service                          | Ephemeral state            | Medium   |
-| 10 | Search Service                            | Text search                | Optional |
-| 11 | Analytics Service                         | Metrics & audit logs       | Optional |
-| 12 | Infra Components (Redis, DB, MinIO, etc.) | Support layer              | Shared   | done
+| Order | Step                                                                  | Deliverable               |
+| ----- | --------------------------------------------------------------------- | ------------------------- |
+| 1️     | Finalize **Auth Service** (JWT issue + refresh)                       | Fully working auth + JWKS |
+| 2️     | Implement **API Service** (core REST + JWT validation)                | User/chats API            |
+| 3     | Setup **Kafka + Zookeeper + MinIO + Elasticsearch** in Docker Compose | Local infra backbone      |
+| 4️     | Build **Socket Service (Go)** with Kafka producers                    | Real-time layer           |
+| 5️     | Implement **Message Consumer Service**                                | Persist messages          |
+| 6️     | Implement **Presence Service** (Redis + Kafka)                        | Online/offline            |
+| 7️     | Implement **Storage Service**                                         | File handling             |
+| 8️     | Implement **Notification Service**                                    | Email/SMS async           |
+| 9️     | Implement **Search Service**                                          | Full-text message search  |
+| 10    | Add **Prometheus + Grafana + Zipkin**                                 | Observability stack       |
+
+

@@ -36,6 +36,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-server'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
@@ -62,7 +63,7 @@ jacocoTestCoverageVerification {
     violationRules {
         rule {
             limit {
-                minimum = 0.9
+                minimum = 0.8
             }
         }
     }

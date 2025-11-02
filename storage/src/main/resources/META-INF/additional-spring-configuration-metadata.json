@@ -1,0 +1,27 @@
+{"properties": [
+  {
+    "name": "spring.zipkin.base-url",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.zipkin.base-url'"
+  },
+  {
+    "name": "minio.bucket",
+    "type": "java.lang.String",
+    "description": "A description for 'minio.bucket'"
+  },
+  {
+    "name": "minio.secret-key",
+    "type": "java.lang.String",
+    "description": "A description for 'minio.secret-key'"
+  },
+  {
+    "name": "minio.access-key",
+    "type": "java.lang.String",
+    "description": "A description for 'minio.access-key'"
+  },
+  {
+    "name": "minio.endpoint",
+    "type": "java.lang.String",
+    "description": "A description for 'minio.endpoint'"
+  }
+]}

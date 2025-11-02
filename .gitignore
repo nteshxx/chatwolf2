@@ -1,9 +1,13 @@
 HELP.md
-.gradle
+
+### Gradle ###
+.gradle/
+**/.gradle/
 build/
-!gradle/wrapper/gradle-wrapper.jar
-!**/src/main/**/build/
-!**/src/test/**/build/
+**/gradle/wrapper/gradle-wrapper.jar
+**/gradlew
+**/gradlew/
+**/gradlew.bat
 
 ### STS ###
 .apt_generated
@@ -15,8 +19,6 @@ build/
 .sts4-cache
 .metadata/
 bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
 
 ### IntelliJ IDEA ###
 .idea
@@ -24,15 +26,6 @@ bin/
 *.iml
 *.ipr
 out/
-!**/src/main/**/out/
-!**/src/test/**/out/
-
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
 
 ### VS Code ###
 .vscode/
@@ -40,3 +33,9 @@ out/
 ### logs ###
 *.log
 logs/
+
+### Environment files ###
+.env
+
+### Node modules ###
+node_modules/
