@@ -1,12 +1,11 @@
 HELP.md
 
 ### Gradle ###
+**/build/
 .gradle/
 **/.gradle/
-build/
-**/gradle/wrapper/gradle-wrapper.jar
+**/gradle/
 **/gradlew
-**/gradlew/
 **/gradlew.bat
 
 ### STS ###
