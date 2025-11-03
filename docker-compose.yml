@@ -2,7 +2,7 @@ services:
   # Eureka Server
   eureka:
     build: ./eureka/
-    image: eureka:0.0.1
+    image: eureka:1.0.0
     container_name: eureka
     ports:
       - "8761:8761"
