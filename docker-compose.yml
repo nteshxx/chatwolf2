@@ -167,34 +167,17 @@ services:
     container_name: redis
     ports:
       - "6379:6379"
-    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
     volumes:
       - redis-data:/data
-      - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
-    environment:
-      REDIS_HOST: ${REDIS_HOST}
-      REDIS_PORT: ${REDIS_PORT}
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf", "--requirepass", "${REDIS_PASSWORD}"]
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
-    restart: unless-stopped
-    networks:
-      - chatwolf-network
-
-  # Redis Insight - GUI for Redis
-  redisinsight:
-    image: redis/redisinsight:2.70.1
-    container_name: redisinsight
-    ports:
-      - "5540:5540"
-    volumes:
-      - redisinsight-data:/db
-    depends_on:
-      redis:
-        condition: service_healthy
     restart: unless-stopped
     networks:
       - chatwolf-network
@@ -207,8 +190,6 @@ volumes:
   grafana-data:
     driver: local
   redis-data:
-    driver: local
-  redisinsight-data:
     driver: local
 
 networks:
