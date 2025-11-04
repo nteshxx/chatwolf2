@@ -110,6 +110,11 @@ services:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus-data:/prometheus
     command: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.path=/prometheus"]
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://prometheus:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
     restart: unless-stopped
     networks:
       - chatwolf-network
@@ -151,7 +156,7 @@ services:
       loki:
         condition: service_healthy
       prometheus:
-        condition: service_started
+        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://grafana:3000/api/health || exit 1"]
       interval: 30s
@@ -182,6 +187,77 @@ services:
     networks:
       - chatwolf-network
 
+  # Zipkin - Distributed Tracing
+  zipkin:
+    image: openzipkin/zipkin:3.5
+    container_name: zipkin
+    ports:
+      - "9411:9411"
+    environment:
+      STORAGE_TYPE: elasticsearch
+      ES_HOSTS: elasticsearch:9200
+      ES_HTTP_LOGGING: BASIC
+      JAVA_OPTS: ${JAVA_OPTS}
+      QUERY_TIMEOUT: 11000
+      QUERY_LOOKBACK: 86400000
+      QUERY_LIMIT: 1000
+      COLLECTOR_SAMPLE_RATE: 1.0
+      SELF_TRACING_ENABLED: false
+      UI_ENVIRONMENT: production
+      UI_BASEPATH: /zipkin
+      METRICS_PROMETHEUS_ENABLED: true
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z zipkin 9411 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - chatwolf-network
+    labels:
+      - "com.chatwolf.description=Zipkin distributed tracing server"
+      - "com.chatwolf.environment=production"
+      - "prometheus.scrape=true"
+      - "prometheus.port=9411"
+      - "prometheus.path=/prometheus"
+
+  # Elasticsearch - Storage for Zipkin
+  elasticsearch:
+    image: elasticsearch:8.11.4
+    container_name: elasticsearch
+    ports:
+      - "9200:9200"
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: false
+      xpack.security.enrollment.enabled: false
+      xpack.security.transport.ssl.enabled: false
+      ES_JAVA_OPTS: ${JAVA_OPTS}
+      cluster.name: zipkin-cluster
+      node.name: zipkin-node-1
+      bootstrap.memory_lock: true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://elasticsearch:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - chatwolf-network
+
 volumes:
   loki-data:
     driver: local
@@ -190,6 +266,8 @@ volumes:
   grafana-data:
     driver: local
   redis-data:
+    driver: local
+  elasticsearch-data:
     driver: local
 
 networks:
