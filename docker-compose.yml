@@ -190,10 +190,6 @@ services:
     container_name: redisinsight
     ports:
       - "5540:5540"
-    environment:
-      REDIS_HOST: ${REDIS_HOST}
-      REDIS_PORT: ${REDIS_PORT}
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
     volumes:
       - redisinsight-data:/db
     depends_on:
