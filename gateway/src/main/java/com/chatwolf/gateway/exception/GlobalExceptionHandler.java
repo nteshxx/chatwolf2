@@ -13,22 +13,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Mono<Object> handleInternalServerError(Exception ex) {
-        return Mono.just(ResponseBuilder.build(
-                        HttpStatus.INTERNAL_SERVER_ERROR, null, "Internal Server Error", ex.getMessage(), null)
-                .getBody());
+        return Mono.just(ResponseBuilder.build(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), null));
     }
 
     @ExceptionHandler(ForbiddenException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public Mono<Object> handleForbiddenException(ForbiddenException ex) {
-        return Mono.just(ResponseBuilder.build(HttpStatus.FORBIDDEN, null, "Forbidden", ex.getMessage(), null)
-                .getBody());
+        return Mono.just(ResponseBuilder.build(HttpStatus.FORBIDDEN, ex.getMessage(), null));
     }
 
     @ExceptionHandler(UnauthorizedException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public Mono<Object> handleUnauthorizedException(UnauthorizedException ex) {
-        return Mono.just(ResponseBuilder.build(HttpStatus.UNAUTHORIZED, null, "Unauthorized", ex.getMessage(), null)
-                .getBody());
+        return Mono.just(ResponseBuilder.build(HttpStatus.UNAUTHORIZED, ex.getMessage(), null));
     }
 }

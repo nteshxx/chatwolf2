@@ -9,17 +9,17 @@ import reactor.core.publisher.Mono;
 @Configuration
 public class RateLimiterConfig {
 
-    // Limit by authenticated principal (if you use OAuth2/security)
     @Primary
     @Bean("UserKeyResolver")
     KeyResolver userKeyResolver() {
+        // Limit by authenticated principal (if you use OAuth2/security)
         return exchange ->
                 exchange.getPrincipal().map(principal -> principal.getName()).defaultIfEmpty("anonymous");
     }
 
-    // Limit by client IP (remote address)
     @Bean("IpKeyResolver")
     KeyResolver ipKeyResolver() {
+        // Limit by client IP (remote address)
         return exchange -> Mono.just(
                 exchange.getRequest().getRemoteAddress() != null
                         ? exchange.getRequest().getRemoteAddress().getAddress().getHostAddress()

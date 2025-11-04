@@ -7,19 +7,12 @@ services:
     ports:
       - "8761:8761"
     environment:
-      JAVA_OPTS: "-Xms512m -Xmx1024m -XX:+UseG1GC"
+      JAVA_OPTS: ${JAVA_OPTS}
       EUREKA_INSTANCE_HOSTNAME: eureka
       EUREKA_SERVER_ENABLE_SELF_PRESERVATION: false
       EUREKA_SERVER_WAIT_TIME_IN_MS_WHEN_SYNC_EMPTY: 0
       EUREKA_CLIENT_REGISTER_WITH_EUREKA: "false"
       EUREKA_CLIENT_FETCH_REGISTRY: "false"
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    networks:
-      - chatwolf-network
     depends_on:
       loki:
         condition: service_healthy
@@ -28,39 +21,80 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+    networks:
+      - chatwolf-network
+
+  # API Gateway
+  gateway:
+    build: ./gateway/
+    image: gateway:1.0.0
+    container_name: gateway
+    ports:
+      - "8080:8080"
+    environment:
+      JAVA_OPTS: ${JAVA_OPTS}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: ${EUREKA_SERVER_URL}
+      JWK_SET_URI: ${JWK_SET_URI}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_TIMEOUT: ${REDIS_TIMEOUT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      ZIPKIN_ENDPOINT: ${ZIPKIN_ENDPOINT}
+    depends_on:
+      eureka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+    networks:
+      - chatwolf-network
+  
   # Loki - Log aggregation
   loki:
     image: grafana/loki:3.5
     container_name: loki
-    restart: unless-stopped
-    ports:
-      - "3100:3100"
     volumes:
       - ./loki-config.yml:/etc/loki/local-config.yaml
       - loki-data:/loki
-    command: -config.file=/etc/loki/local-config.yaml
-    networks:
-      - chatwolf-network
+    command: ["-config.file=/etc/loki/local-config.yaml"]
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3100/ready || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
+    restart: unless-stopped
+    networks:
+      - chatwolf-network
 
   # Promtail - Log shipper (collects logs from containers)
   promtail:
     image: grafana/promtail:3.5
     container_name: promtail
-    restart: unless-stopped
     volumes:
       - ./promtail-config.yml:/etc/promtail/config.yml
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
-    command: -config.file=/etc/promtail/config.yml
+    command: ["-config.file=/etc/promtail/config.yml"]
     depends_on:
       loki:
         condition: service_healthy
+    restart: unless-stopped
     networks:
       - chatwolf-network
 
@@ -68,15 +102,11 @@ services:
   prometheus:
     image: prom/prometheus:v3.7.3
     container_name: prometheus
-    restart: unless-stopped
-    ports:
-      - "9090:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus-data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
+    command: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.path=/prometheus"]
+    restart: unless-stopped
     networks:
       - chatwolf-network
 
@@ -84,47 +114,30 @@ services:
   grafana:
     image: grafana/grafana:12.2.1
     container_name: grafana
-    restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
-      # Security
-      - GF_SECURITY_ADMIN_USER=${GF_ADMIN_USER:-admin}
-      - GF_SECURITY_ADMIN_PASSWORD=${GF_ADMIN_PASSWORD:-changeme}
-      - GF_SECURITY_SECRET_KEY=${GF_SECRET_KEY:-SW2YcwTIb9zpOOhoPsMm}
-      
-      # Server
-      - GF_SERVER_ROOT_URL=${GF_ROOT_URL:-http://localhost:3000}
-      - GF_SERVER_DOMAIN=${GF_DOMAIN:-localhost}
-      
+      GF_SECURITY_ADMIN_USER: ${GF_ADMIN_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_ADMIN_PASSWORD}
+      GF_SECURITY_SECRET_KEY: ${GF_SECRET_KEY}
+      GF_SERVER_ROOT_URL: ${GF_ROOT_URL}
+      GF_SERVER_DOMAIN: ${GF_DOMAIN}
+      GF_ANALYTICS_REPORTING_ENABLED: false
+      GF_ANALYTICS_CHECK_FOR_UPDATES: false
+      GF_USERS_ALLOW_SIGN_UP: false
+      GF_USERS_ALLOW_ORG_CREATE: false
+      GF_USERS_AUTO_ASSIGN_ORG: true
+      GF_USERS_AUTO_ASSIGN_ORG_ROLE: Viewer
+      GF_AUTH_ANONYMOUS_ENABLED: false
+      GF_AUTH_DISABLE_LOGIN_FORM: false
+      GF_LOG_MODE: console
+      GF_LOG_LEVEL: info
+      GF_PLUGINS_ENABLE_ALPHA: false
+      GF_ALERTING_ENABLED: true
+      GF_UNIFIED_ALERTING_ENABLED: true
       # Database (for production, use external PostgreSQL)
-      - GF_DATABASE_TYPE=sqlite3
-      - GF_DATABASE_PATH=/var/lib/grafana/grafana.db
-      
-      # Analytics
-      - GF_ANALYTICS_REPORTING_ENABLED=false
-      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
-      
-      # Users
-      - GF_USERS_ALLOW_SIGN_UP=false
-      - GF_USERS_ALLOW_ORG_CREATE=false
-      - GF_USERS_AUTO_ASSIGN_ORG=true
-      - GF_USERS_AUTO_ASSIGN_ORG_ROLE=Viewer
-      
-      # Auth
-      - GF_AUTH_ANONYMOUS_ENABLED=false
-      - GF_AUTH_DISABLE_LOGIN_FORM=false
-      
-      # Logging
-      - GF_LOG_MODE=console
-      - GF_LOG_LEVEL=info
-      
-      # Plugins
-      - GF_PLUGINS_ENABLE_ALPHA=false
-      
-      # Alerting
-      - GF_ALERTING_ENABLED=true
-      - GF_UNIFIED_ALERTING_ENABLED=true
+      GF_DATABASE_TYPE: sqlite3
+      GF_DATABASE_PATH: /var/lib/grafana/grafana.db
     volumes:
       - grafana-data:/var/lib/grafana
       - ./grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
@@ -135,13 +148,51 @@ services:
         condition: service_healthy
       prometheus:
         condition: service_started
-    networks:
-      - chatwolf-network
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
+    restart: unless-stopped
+    networks:
+      - chatwolf-network
+
+  # Redis - Memory caching and Pub/Sub
+  redis:
+    image: redis:8.2-alpine
+    container_name: redis
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    volumes:
+      - redis-data:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
+    environment:
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - chatwolf-network
+
+  # Redis Commander - Web UI for Redis
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: redis-commander
+    ports:
+      - "8081:8081"
+    environment:
+      REDIS_HOSTS: redis:6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - chatwolf-network
 
 volumes:
   loki-data:
@@ -149,6 +200,8 @@ volumes:
   prometheus-data:
     driver: local
   grafana-data:
+    driver: local
+  redis-data:
     driver: local
 
 networks:

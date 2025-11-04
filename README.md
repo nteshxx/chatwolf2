@@ -58,36 +58,38 @@ High Level Design:
 
 Services
 
-| #    | Service                      | Purpose                      | Status          |
-|------| ---------------------------- | ---------------------------- | --------------- |
++---------------------------------------------------------------------------------------+
+| #    | Service                      | Purpose                      | Status           |
+|------| ---------------------------- | ---------------------------- | -----------------+
 | 1️    | **Eureka Server**            | Service Discovery            | ✅ Done         |
-| 2️    | **API Gateway**              | Entry point                  | ✅ Done         |
-| 3    | **Auth Service**             | Authentication & JWT         | ✅ Done         |
-| 4️    | **API Service**              | Core REST APIs               | ✅ Done         |
-| 5️    | **Socket Service (Go)**      | Real-time messaging          | ✅ Done         |
-| 6️    | **Message Consumer Service** | Persist messages from Kafka  | 🚧 In Progress  |
+| 2️    | **API Gateway**              | Entry point                  | 🚧 In Progress  |
+| 3    | **Auth Service**             | Authentication & JWT         | 🚧 In Progress  |
+| 4️    | **API Service**              | Core REST APIs               | ⏳ Pending      |
+| 5️    | **Socket Service (Go)**      | Real-time messaging          | ⏳ Pending      |
+| 6️    | **Message Consumer Service** | Persist messages from Kafka  | ⏳ Pending      |
 | 7️    | **Presence Service**         | Manage online status         | ⏳ Pending      |
-| 8️    | **Storage Service**          | File uploads to MinIO        | 🆕 Pending      |
-| 9️    | **Notification Service**     | Email/SMS notifications      | 🆕 Pending      |
-| 10   | **Search Service**           | Elasticsearch message search | 🆕 Pending      |
-| 1️1   | **PostgreSQL DB**            | Persistent store             | ✅ Done         |
-| 1️2   | **Kafka**                    | Event backbone               | ✅ Done         |
-| 1️3   | **Grafana**                  | Monitoring + tracing         | 🧩 To Integrate |
+| 8️    | **Storage Service**          | File uploads to MinIO        | ⏳ Pending      |
+| 9️    | **Notification Service**     | Email/SMS notifications      | ⏳ Pending      |
+| 10   | **Search Service**           | Elasticsearch message search | ⏳ Pending      |
+| 1️1   | **PostgreSQL DB**            | Persistent store             | ⏳ Pending      |
+| 1️2   | **Kafka**                    | Event backbone               | ⏳ Pending      |
+| 1️1   | **Zipkin**                   | Distributed tracing          | ⏳ Pending      |
+| 1️3   | **Grafana**                  | Monitoring + tracing         | ✅ Done         |
++---------------------------------------------------------------------------------------+
 
 
-Docker
+Docker Components
 
 ---------------------------------------------------------------------------------------
 | Component            | Docker Image        | Ports     | Role                       |
 | -------------------- | ------------------- | --------- | -------------------------- |
-| PostgreSQL           | `postgres:16`       | 5432      | Persistent data            | done
-| Redis                | `redis:7`           | 6379      | Cache, pub/sub, rate limit | done
-| MinIO                | `minio/minio`       | 9000/9001 | Attachment storage         | done
-| Kafka (optional)     | `bitnami/kafka`     | 9092      | Message broker             | done
-| Zookeeper (if Kafka) | `bitnami/zookeeper` | 2181      | Kafka dependency           | done
-| Prometheus           | `prom/prometheus`   | 9090      | Metrics                    | done
-| Grafana              | `grafana/grafana`   | 3000      | Dashboards                 | done
-
+| Eureka               | `eureka:1.0.0`      | 8761      | Service Discovery          |
+| Eureka               | `gateway:1.0.0`     | 8080      | API Gateway                |
+| Promtail             | `apache/kafka`      | 9092      | Log Shipper to Loki        |
+| Loki                 | `grafana/loki`      | 2181      | Logs                       |
+| Prometheus           | `prom/prometheus`   | 9090      | Metrics                    |
+| Grafana              | `grafana/grafana`   | 3000      | Logs + Metrics Dashboards  | 
+---------------------------------------------------------------------------------------
 
 
 Deliverables:
