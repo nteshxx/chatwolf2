@@ -37,7 +37,7 @@ services:
     image: gateway:1.0.0
     container_name: gateway
     ports:
-      - "8080:8080"
+      - "7000:7000"
     environment:
       JAVA_OPTS: ${JAVA_OPTS}
       SPRING_PROFEILE: ${SPRING_PROFILE}
@@ -129,6 +129,8 @@ services:
   promtail:
     image: grafana/promtail:3.5
     container_name: promtail
+    ports:
+      - "9092:9092"
     volumes:
       - ./promtail-config.yml:/etc/promtail/config.yml
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
