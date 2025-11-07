@@ -1,66 +1,72 @@
 High Level Design:
 
+### Architecture Overview
 
-                     ┌──────────────────┐
-                     │  React Frontend  │
-                     └───────┬──────────┘
-                             │
-                     ┌───────▼──────────┐
-                     │  API Gateway     │
-                     │ (Spring Cloud)   │
-                     └───────┬──────────┘
-                             │
-        ┌────────────────────┼──────────────────────────────────────────────┐
-        │                    │                      │                       │
- ┌──────▼──────┐    ┌────────▼────────┐     ┌───────▼────────┐      ┌───────▼────────┐
- │Auth Service │    │ API Service     │     │ Socket Service │      │ Presence Svc   │
- │ (JWT + User)│    │ (REST + DB)     │     │ (Go + WS)      │      │ (Redis + Kafka)│
- └──────┬──────┘    └────────┬────────┘     └────────┬───────┘      └───────┬────────┘
-        │                    │                       │                      │
-        │                    │                       │                      │
-        │                    │                       │                      │
-        │                    │                       │                      │
-        │                    │                       │                      │
-        │                    ▼                       ▼                      ▼
-        │        ┌────────────────────────────┐      │                      │
-        │        │  Message Consumer Svc      │◄─────┘                      │
-        │        │  (Kafka → PostgreSQL)      │                             │
-        │        └─────────┬──────────────────┘                             │
-        │                  │                                                │
-        │          ┌───────▼────────┐                                       │
-        │          │ Storage Svc    │                                       │
-        │          │ (MinIO + REST) │                                       │
-        │          └───────┬────────┘                                       │
-        │                  │                                                │
-        │          ┌───────▼────────┐                                       │
-        │          │ Notification   │                                       │
-        │          │ Service (Mail, │                                       │
-        │          │ SMS via Kafka) │                                       │
-        │          └───────┬────────┘                                       │
-        │                  │                                                │
-        │          ┌───────▼────────┐                                       │
-        │          │ Search Service │                                       │
-        │          │ (Elasticsearch)│                                       │
-        │          └────────────────┘                                       │
-        │                                                                   │
-        ▼                                                                   │
- ┌───────────────────────────┐                                              │
- │ Eureka Server (Discovery) │◄─────────────────────────────────────────────┘ 
- └────────────┬──────────────┘
-              ▼
- ┌────────────────────────┐
- │ Observability Stack    │
- │ Prometheus + Grafana + │
- │ Zipkin + Micrometer    │
- └────────────────────────┘
+```text
+   ┌──────────────────┐
+   │ React Frontend   │
+   └───────┬──────────┘
+           │                   ┌───────────────────────┐
+   ┌───────▼──────────┐        │ Observability Stack   │
+   │ API Gateway      │        │ Prometheus + Grafana  │
+   │ (Spring Cloud)   │        │ Zipkin + Micrometer   │
+   └───────┬──────────┘        └───────────────────────┘
+           │
+  ┌────────┼──────────────────┬─────────┐
+  │        │                  │         │
+┌─▼────┐ ┌─▼────────┐ ┌───────▼────┐ ┌──▼────────┐
+│Auth  │ │   API    │ │ Socket Svc │ │ Presence  │
+│(JWT  │ │ (REST +  │ │ (Go + WS)  │ │ (Redis +  │
+│+User)│ │   DB)    │ │            │ │ Kafka)    │
+└─┬────┘ └─┬────────┘ └───┬────────┘ └────────┬──┘
+  │        │              │___________________│
+  │        │              │                   │
+  │        │    ┌─────────▼────────────┐      │
+  │        │    │   Message Consumer   │______│
+  │        │    │ (Kafka → PostgreSQL) │      │
+  │        │    └──────┬───────────────┘      │
+  │        │           │                      │
+  │        │ ┌─────────▼────────┐             │
+  │        │ │ Storage Service  │_____________│
+  │        │ │ (MinIO + REST)   │             │
+  │        │ └──────┬───────────┘             │
+  │        │        │                         │
+  │        │ ┌──────▼────────┐                │
+  │        │ │ Notification  │                │
+  │        │ │ (Mail/SMS via │________________│
+  │        │ │   Kafka)      │                │
+  │        │ └───────────────┘                │
+  │        │                                  │
+  │        │ ┌─────────────────┐              │
+  │        │ │ Search Service  │              │
+  │        │ │ (Elasticsearch) │              │
+  │        │ └─────────────────┘              │
+  │        │         │________________________│
+┌─▼────────▼─────────▼─┐
+│ Eureka Server        │
+│ (Service Discovery)  │
+└──────────────────────┘
+
+```
+
+Services (brief):
+- Auth Service — JWT, user management
+- API Service — Core REST APIs, DB
+- Socket Service — Real-time messaging (Go, WebSocket)
+- Presence Service — Online status (Redis + Kafka)
+- Message Consumer — Persist messages from Kafka to Postgres
+- Storage Service — File uploads (MinIO + REST)
+- Notification Service — Email/SMS (via Kafka)
+- Search Service — Elasticsearch for message search
+- Eureka — Service discovery
+- Observability — Prometheus, Grafana, Zipkin, Micrometer
 
 
+Microservices:
 
-Services
-
-+---------------------------------------------------------------------------------------+
+-----------------------------------------------------------------------------------------
 | #    | Service                      | Purpose                      | Status           |
-|------| ---------------------------- | ---------------------------- | -----------------+
+|------| ---------------------------- | ---------------------------- | ------------------
 | 1️    | **Eureka Server**            | Service Discovery            | ✅ Done         |
 | 2️    | **API Gateway**              | Entry point                  | ✅ Done         |
 | 3    | **Auth Service**             | Authentication & JWT         | ✅ Done         |
@@ -71,40 +77,40 @@ Services
 | 8️    | **Storage Service**          | File uploads to MinIO        | ⏳ Pending      |
 | 9️    | **Notification Service**     | Email/SMS notifications      | ⏳ Pending      |
 | 10   | **Search Service**           | Elasticsearch message search | ⏳ Pending      |
-| 1️1   | **PostgreSQL DB**            | Persistent store             | ⏳ Pending      |
-| 1️2   | **Kafka**                    | Event backbone               | ⏳ Pending      |
-| 1️1   | **Zipkin**                   | Distributed tracing          | ⏳ Pending      |
-| 1️3   | **Grafana**                  | Monitoring + tracing         | ✅ Done         |
-+---------------------------------------------------------------------------------------+
+-----------------------------------------------------------------------------------------
 
 
-Docker Components
+Docker Containers
 
----------------------------------------------------------------------------------------
-| Component            | Docker Image        | Ports     | Role                       |
-| -------------------- | ------------------- | --------- | -------------------------- |
-| Eureka               | `eureka:1.0.0`      | 8761      | Service Discovery          |
-| Eureka               | `gateway:1.0.0`     | 8080      | API Gateway                |
-| Promtail             | `apache/kafka`      | 9092      | Log Shipper to Loki        |
-| Loki                 | `grafana/loki`      | 2181      | Logs                       |
-| Prometheus           | `prom/prometheus`   | 9090      | Metrics                    |
-| Grafana              | `grafana/grafana`   | 3000      | Logs + Metrics Dashboards  | 
----------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------
+| Container            | Docker Image             | Ports     | Role                       |
+| -------------------- | ------------------------ | --------- | -------------------------- |
+| Eureka               | `eureka:1.0.0`           | 8761      | Service Discovery          |
+| Gateway              | `gateway:1.0.0`          | 7000      | API Gateway                |
+| Auth                 | `auth:1.0.0`             | 7100      | Auth Service               |
+| Loki                 | `grafana/loki:3.5`       | 3100      | Logs                       |
+| Promtail             | `grafana/promtail:3.5`   | 9092      | Log Shipper to Loki        |
+| Prometheus           | `prom/prometheus:v3.7.3` | 9090      | Metrics                    |
+| Grafana              | `grafana/grafana:12.2.1` | 3000      | Logs + Metrics Dashboards  |
+| Redis                | `redis:8.2-alpine`       | 6379      | Rate Limit & Caching       |
+| Zipkin               | `openzipkin/zipkin:3.5`  | 9411      | Distributed Tracing        |
+| Elasticsearch        | `elasticsearch:8.11.4`   | 9200      | Zipkin Storage             |
+| Postgres             | `postgres:18-alpine`     | 5432      | Database Storage           |
+--------------------------------------------------------------------------------------------
 
 
-Deliverables:
+Deliverables Remaining:
 
+-------------------------------------------------------------------------------------------------------------
 | Order | Step                                                                  | Deliverable               |
 | ----- | --------------------------------------------------------------------- | ------------------------- |
-| 1️     | Finalize **Auth Service** (JWT issue + refresh)                       | Fully working auth + JWKS |
-| 2️     | Implement **API Service** (core REST + JWT validation)                | User/chats API            |
-| 3     | Setup **Kafka + Zookeeper + MinIO + Elasticsearch** in Docker Compose | Local infra backbone      |
-| 4️     | Build **Socket Service (Go)** with Kafka producers                    | Real-time layer           |
-| 5️     | Implement **Message Consumer Service**                                | Persist messages          |
-| 6️     | Implement **Presence Service** (Redis + Kafka)                        | Online/offline            |
-| 7️     | Implement **Storage Service**                                         | File handling             |
-| 8️     | Implement **Notification Service**                                    | Email/SMS async           |
-| 9️     | Implement **Search Service**                                          | Full-text message search  |
-| 10    | Add **Prometheus + Grafana + Zipkin**                                 | Observability stack       |
-
-
+| 1     | Build **Socket Service (Go)** with Kafka producers                    | Real-time layer           |
+| 2     | Implement **Presence Service** (Redis + Kafka)                        | Online/offline            |
+| 3     | Setup **Kafka + Zookeeper** in Docker Compose                         | Local infra backbone      |
+| 4     | Implement **Message Consumer Service**                                | Persist messages          |
+| 5     | Implement **API Service** (core REST + JWT validation)                | User/chats API            |
+| 6     | Implement **Storage Service + MinIO**                                 | File handling             |
+| 7     | Implement **Notification Service**                                    | Email/SMS async           |
+| 8     | Implement **Search Service**                                          | Full-text message search  |
+| 9     | Add **Prometheus + Grafana + Zipkin**                                 | Observability stack       |
+-------------------------------------------------------------------------------------------------------------
