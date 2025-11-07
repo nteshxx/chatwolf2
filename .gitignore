@@ -44,3 +44,6 @@ node_modules/
 
 ### Grafana ###
 grafana-dashboards/
+
+### Docker ###
+backups/
