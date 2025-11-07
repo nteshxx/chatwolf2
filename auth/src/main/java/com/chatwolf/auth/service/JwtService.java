@@ -20,7 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.stereotype.Service;
 
@@ -56,7 +55,7 @@ public class JwtService {
             JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
                     .subject(String.valueOf(user.getUserId()))
                     .issuer(issuer)
-                    .audience("chatwolf-user")
+                    .audience("chatwolf")
                     .expirationTime(new Date(System.currentTimeMillis() + accessTokenExpirationMs))
                     .notBeforeTime(new Date())
                     .issueTime(new Date())
@@ -78,7 +77,8 @@ public class JwtService {
             return signedJWT.serialize();
 
         } catch (Exception e) {
-            throw new RuntimeException("Error generating JWT Access token", e);
+            log.error("generating jwt access token error: {}", e.getMessage());
+            throw new RuntimeException("generating jwt access token failed");
         }
     }
 
@@ -111,7 +111,8 @@ public class JwtService {
             return signedJWT.serialize();
 
         } catch (Exception e) {
-            throw new RuntimeException("Error generating JWT Refresh token", e);
+            log.error("generating jwt refresh token error: {}", e.getMessage());
+            throw new RuntimeException("generating jwt refresh token failed");
         }
     }
 
@@ -120,14 +121,10 @@ public class JwtService {
             RSAPublicKey publicKey = rsaKey.toRSAPublicKey();
             JwtDecoder jwtDecoder = NimbusJwtDecoder.withPublicKey(publicKey).build();
             return Optional.of(jwtDecoder.decode(token));
-        } catch (JwtException jwtVerfEx) {
-            log.error("Jwt Token Verification failed");
-            throw new UnauthorizedException("Invalid Jwt Token");
         } catch (JOSEException e) {
-            log.error("Jwt Token Verification failed");
-            throw new UnauthorizedException("JWT Key Not SUpported");
+            throw new UnauthorizedException("jwt key not supported");
         } catch (Exception e) {
-            throw new UnauthorizedException("Decode JWT Token failed");
+            throw new UnauthorizedException("decoding jwt token failed");
         }
     }
 

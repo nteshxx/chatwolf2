@@ -47,9 +47,9 @@ public class AccessTokenFilter extends OncePerRequestFilter {
             }
 
         } catch (UnauthorizedException e) {
-            log.error("Invalid Token");
+            log.error("invalid token");
         } catch (Exception e) {
-            log.error("Internal Server Error: ", e);
+            log.error("access token filter: {}", e.getMessage());
         }
 
         filterChain.doFilter(request, response);

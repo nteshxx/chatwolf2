@@ -1,6 +1,5 @@
 package com.chatwolf.auth.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -14,12 +13,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-
-    @Autowired
-    private AccessTokenEntryPoint accessTokenEntryPoint;
-
-    @Autowired
-    private CustomAccessDeniedHandler customAccessDeniedHandler;
 
     @Bean
     AccessTokenFilter accessTokenFilter() {
@@ -35,7 +28,7 @@ public class SecurityConfig {
                                 "/auth/refresh",
                                 "/auth/token",
                                 "/auth/validate",
-                                "/.well-known/jwks.json",
+                                "/auth/.well-known/jwks.json",
                                 "/actuator/**")
                         .permitAll()
                         .anyRequest()
@@ -44,9 +37,6 @@ public class SecurityConfig {
                 .csrf((csrf) -> csrf.disable())
                 .httpBasic(httpBasic -> httpBasic.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .exceptionHandling(exceptions -> exceptions
-                        .authenticationEntryPoint(accessTokenEntryPoint)
-                        .accessDeniedHandler(customAccessDeniedHandler))
                 .addFilterBefore(accessTokenFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

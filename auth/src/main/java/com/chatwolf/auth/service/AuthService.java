@@ -9,12 +9,12 @@ import com.chatwolf.auth.dto.Token;
 import com.chatwolf.auth.entity.RefreshToken;
 import com.chatwolf.auth.entity.User;
 import com.chatwolf.auth.exception.BadRequestException;
-import com.chatwolf.auth.exception.ResourceNotFoundException;
 import com.chatwolf.auth.exception.UnauthorizedException;
 import com.chatwolf.auth.utility.TokenHasher;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -27,6 +27,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 public class AuthService {
 
@@ -49,7 +50,7 @@ public class AuthService {
     public AuthRespone register(Register signupDetails, Role role) {
         Optional<User> existingUser = userService.checkIfUserExists(signupDetails.getEmail());
         if (existingUser.isPresent()) {
-            throw new BadRequestException("Email Id Is Already Taken");
+            throw new BadRequestException("email already registered");
         }
         User user = User.builder()
                 .firstName(signupDetails.getFirstName())
@@ -84,9 +85,10 @@ public class AuthService {
             return new AuthRespone(user, new Token(accessToken, refreshTokenString));
 
         } catch (BadCredentialsException badCredEx) {
-            throw new UnauthorizedException("Incorrect Username or Password");
+            throw new UnauthorizedException("incorrect username or password");
         } catch (InternalAuthenticationServiceException e) {
-            throw new ResourceNotFoundException(e.getMessage());
+            log.error("login error: {}", e.getMessage());
+            throw new UnauthorizedException("incorrect username or password");
         }
     }
 
@@ -110,7 +112,7 @@ public class AuthService {
             return responseData;
         }
 
-        throw new UnauthorizedException("Invalid Refresh Token");
+        throw new UnauthorizedException("invalid refresh token");
     }
 
     public Token accessToken(String bearerToken) {
@@ -128,7 +130,7 @@ public class AuthService {
             Token responseData = new Token(accessToken, null);
             return responseData;
         }
-        throw new UnauthorizedException("Invalid Access Token");
+        throw new UnauthorizedException("invalid access token");
     }
 
     @Transactional
@@ -144,7 +146,7 @@ public class AuthService {
             refreshTokenService.deleteRefreshToken(dbRefreshToken.get().getTokenId());
             return;
         }
-        throw new UnauthorizedException("Invalid Refresh Token");
+        throw new UnauthorizedException("invalid refresh token");
     }
 
     @Transactional
@@ -161,12 +163,12 @@ public class AuthService {
                     dbRefreshToken.get().getUser().getUserId());
             return;
         }
-        throw new UnauthorizedException("Invalid Refresh Token");
+        throw new UnauthorizedException("invalid refresh token");
     }
 
     @Transactional
     public Boolean updatePassword(User user, ChangePassword changePasswordDto) {
-        boolean isPasswordValid = passwordEncoder.matches(changePasswordDto.getOldPassword(), user.getPassword());
+        boolean isPasswordValid = passwordEncoder.matches(changePasswordDto.getCurrentPassword(), user.getPassword());
         if (isPasswordValid) {
             user.setPassword(passwordEncoder.encode(changePasswordDto.getNewPassword()));
             userService.saveUser(user);
@@ -195,7 +197,7 @@ public class AuthService {
 
     public Optional<Jwt> getClaims(String token) {
         if (token == null) {
-            throw new BadRequestException("Token is Missing");
+            throw new BadRequestException("token is missing");
         }
         return jwtService.decodeJwtToken(token);
     }

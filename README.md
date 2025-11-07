@@ -62,8 +62,8 @@ Services
 | #    | Service                      | Purpose                      | Status           |
 |------| ---------------------------- | ---------------------------- | -----------------+
 | 1️    | **Eureka Server**            | Service Discovery            | ✅ Done         |
-| 2️    | **API Gateway**              | Entry point                  | 🚧 In Progress  |
-| 3    | **Auth Service**             | Authentication & JWT         | 🚧 In Progress  |
+| 2️    | **API Gateway**              | Entry point                  | ✅ Done         |
+| 3    | **Auth Service**             | Authentication & JWT         | ✅ Done         |
 | 4️    | **API Service**              | Core REST APIs               | ⏳ Pending      |
 | 5️    | **Socket Service (Go)**      | Real-time messaging          | ⏳ Pending      |
 | 6️    | **Message Consumer Service** | Persist messages from Kafka  | ⏳ Pending      |

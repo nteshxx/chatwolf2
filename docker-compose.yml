@@ -8,6 +8,7 @@ services:
       - "8761:8761"
     environment:
       JAVA_OPTS: ${JAVA_OPTS}
+      SPRING_PROFEILE: ${SPRING_PROFILE}
       EUREKA_INSTANCE_HOSTNAME: eureka
       EUREKA_SERVER_ENABLE_SELF_PRESERVATION: false
       EUREKA_SERVER_WAIT_TIME_IN_MS_WHEN_SYNC_EMPTY: 0
@@ -39,6 +40,7 @@ services:
       - "8080:8080"
     environment:
       JAVA_OPTS: ${JAVA_OPTS}
+      SPRING_PROFEILE: ${SPRING_PROFILE}
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: ${EUREKA_SERVER_URL}
       JWK_SET_URI: ${JWK_SET_URI}
       REDIS_HOST: ${REDIS_HOST}
@@ -53,6 +55,45 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://gateway:8080/actuator/health | grep -q 'UP' || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 10
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+    networks:
+      - chatwolf-network
+
+  # Auth Service
+  auth:
+    build: ./auth/
+    image: auth:1.0.0
+    container_name: auth
+    ports:
+      - "7100:7100"
+    environment:
+      JAVA_OPTS: ${JAVA_OPTS}
+      SPRING_PROFEILE: ${SPRING_PROFILE}
+      CHATWOLF_DB_HOST: ${CHATWOLF_DB_HOST}
+      CHATWOLF_DB_PORT: ${CHATWOLF_DB_PORT}
+      CHATWOLF_DB_NAME: ${CHATWOLF_DB_NAME}
+      CHATWOLF_DB_USER: ${CHATWOLF_DB_USER}
+      CHATWOLF_DB_PASSWORD: ${CHATWOLF_DB_PASSWORD}
+      JWT_ISSUER: ${JWT_ISSUER}
+      JWT_EXPIRATION_MINUTES: ${JWT_EXPIRATION_MINUTES}
+      JWT_REFRESH_EXPIRATION_DAYS: ${JWT_REFRESH_EXPIRATION_DAYS}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: ${EUREKA_SERVER_URL}      
+      ZIPKIN_ENDPOINT: ${ZIPKIN_ENDPOINT}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://auth:7100/actuator/health | grep -q 'UP' || exit 1"]
       interval: 20s
       timeout: 5s
       retries: 10

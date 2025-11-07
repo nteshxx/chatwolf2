@@ -10,11 +10,11 @@ import lombok.Setter;
 @Setter
 public class Login {
 
-    @NotBlank(message = "Email cannot be blank")
-    @Size(max = 60, message = "Email must not exceed 60 characters")
-    @Email(message = "Invalid email format")
+    @NotBlank(message = "email cannot be blank")
+    @Size(max = 60, message = "email must not exceed 60 characters")
+    @Email(message = "invalid email")
     private String email;
 
-    @NotBlank(message = "Password cannot be blank")
+    @NotBlank(message = "password cannot be blank")
     private String password;
 }

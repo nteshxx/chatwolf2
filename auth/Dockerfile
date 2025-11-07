@@ -15,18 +15,18 @@ RUN gradle clean build -x test
 FROM eclipse-temurin:21-jre-alpine
 
 LABEL maintainer="chatwolf"
-LABEL description="Eureka Server - Service Discovery"
+LABEL description="Auth Service - JWT Authentication Service"
 
 WORKDIR /app
 
 # Copy built JAR from builder stage
-COPY --from=builder /build/build/libs/*.jar eureka.jar
+COPY --from=builder /build/build/libs/*.jar auth.jar
 
 # Expose Eureka default port
-EXPOSE 8761
+EXPOSE 7100
 
 # Set JVM options for production
 ENV JAVA_OPTS="-Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
 
 # Run the application
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar eureka.jar"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar auth.jar"]

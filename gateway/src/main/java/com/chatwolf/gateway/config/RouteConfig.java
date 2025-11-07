@@ -36,7 +36,8 @@ public class RouteConfig {
     RouteLocator routes(RouteLocatorBuilder builder) {
         return builder.routes()
                 .route("auth", r -> r.path("/api/v1/auth/**")
-                        .filters(f -> f.requestRateLimiter(config -> {
+                        .filters(f -> f.stripPrefix(2)
+                                .requestRateLimiter(config -> {
                                     config.setKeyResolver(ipAddressKeyResolver());
                                     config.setRateLimiter(loginRateLimiter());
                                 })

@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class KeyConfig {
+public class JwtKeyConfig {
 
     @Bean
     KeyPair keyPair() {

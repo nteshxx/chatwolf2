@@ -8,9 +8,7 @@ import com.chatwolf.auth.dto.Register;
 import com.chatwolf.auth.dto.Token;
 import com.chatwolf.auth.entity.User;
 import com.chatwolf.auth.service.AuthService;
-import com.chatwolf.auth.utility.CookieExtractor;
 import com.chatwolf.auth.utility.ResponseBuilder;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.util.Map;
 import java.util.Optional;
@@ -21,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,7 +28,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/auth")
 public class AuthController {
 
     private final AuthService authService;
@@ -41,52 +40,62 @@ public class AuthController {
     @Value("${jwt.refresh-token-expiration-days}")
     private Integer refreshTokenExpirationDays;
 
-    @PostMapping("/auth/register")
+    @PostMapping("/register")
     public ResponseEntity<Object> signup(@Valid @RequestBody Register signupDetails) {
         AuthRespone data = authService.register(signupDetails, Role.ADMIN);
         ResponseCookie cookie = ResponseCookie.from(
-                        "refreshToken", data.getToken().getRefreshToken())
+                        "REFRESHTOKEN", data.getToken().getRefreshToken())
                 .httpOnly(true)
                 .secure(true)
                 .sameSite("Strict")
                 .path("/")
                 .maxAge(refreshTokenExpirationDays * 24 * 60 * 60)
                 .build();
-        return ResponseBuilder.build(HttpStatus.CREATED, cookie, null, "Successfully Signed Up", data);
+        return ResponseBuilder.build(HttpStatus.CREATED, cookie, "registered", data);
     }
 
-    @PostMapping("/auth/login")
+    @PostMapping("/login")
     public ResponseEntity<Object> login(@Valid @RequestBody Login loginDetails) {
         AuthRespone data = authService.login(loginDetails);
         ResponseCookie cookie = ResponseCookie.from(
-                        "refreshToken", data.getToken().getRefreshToken())
+                        "REFRESHTOKEN", data.getToken().getRefreshToken())
                 .httpOnly(true)
                 .secure(true)
                 .sameSite("Strict")
                 .path("/")
                 .maxAge(refreshTokenExpirationDays * 24 * 60 * 60)
                 .build();
-        return ResponseBuilder.build(HttpStatus.OK, cookie, null, "Successfully Logged In", data);
+        return ResponseBuilder.build(HttpStatus.OK, cookie, "logged in", data);
     }
 
-    @GetMapping("/auth/refresh")
-    public ResponseEntity<Object> getRefreshToken(HttpServletRequest request) {
-        String requestRefreshToken = CookieExtractor.getCookie(request, "refreshToken");
-        if (requestRefreshToken != null) {
-            Token data = authService.refreshToken(requestRefreshToken);
-            ResponseCookie cookie = ResponseCookie.from("refreshToken", data.getRefreshToken())
+    @GetMapping("/refresh")
+    public ResponseEntity<Object> getRefreshToken(
+            @CookieValue(name = "REFRESHTOKEN", required = true) String refreshToken) {
+        if (refreshToken != null) {
+            Token data = authService.refreshToken(refreshToken);
+            ResponseCookie cookie = ResponseCookie.from("REFRESHTOKEN", data.getRefreshToken())
                     .httpOnly(true)
                     .secure(true)
                     .sameSite("Strict")
                     .path("/")
                     .maxAge(refreshTokenExpirationDays * 24 * 60 * 60)
                     .build();
-            return ResponseBuilder.build(HttpStatus.OK, cookie, null, "Successfully Generated New Refresh Token", null);
+            return ResponseBuilder.build(HttpStatus.OK, cookie, "new refresh token generated", null);
         }
-        return ResponseBuilder.build(HttpStatus.UNAUTHORIZED, null, null, "Refresh Token Cookie Not Found", null);
+        return ResponseBuilder.build(HttpStatus.UNAUTHORIZED, null, "invalid cookie", null);
     }
 
-    @PostMapping("/auth/validate")
+    @GetMapping("/token")
+    public ResponseEntity<Object> getAccessToken(
+            @CookieValue(name = "REFRESHTOKEN", required = true) String refreshToken) {
+        if (refreshToken != null) {
+            Token data = authService.accessToken(refreshToken);
+            return ResponseBuilder.build(HttpStatus.OK, null, "new access token generated", data.getAccessToken());
+        }
+        return ResponseBuilder.build(HttpStatus.UNAUTHORIZED, null, "invalid cookie", null);
+    }
+
+    @PostMapping("/validate")
     public ResponseEntity<?> validateToken(@RequestBody Map<String, String> body) {
         String token = body.get("token");
         Optional<Jwt> claims = authService.getClaims(token);
@@ -96,82 +105,65 @@ public class AuthController {
         return ResponseEntity.ok(Map.of("valid", false, "claims", "{}"));
     }
 
-    @GetMapping("/auth/token")
-    public ResponseEntity<Object> getAccessToken(HttpServletRequest request) {
-        String requestRefreshToken = CookieExtractor.getCookie(request, "refreshToken");
-        if (requestRefreshToken != null) {
-            Token data = authService.accessToken(requestRefreshToken);
-            return ResponseBuilder.build(
-                    HttpStatus.OK, null, null, "Successfully Generated New Access Token", data.getAccessToken());
-        }
-        return ResponseBuilder.build(HttpStatus.UNAUTHORIZED, null, null, "Refresh Token Cookie Not Found", null);
+    @GetMapping("/.well-known/jwks.json")
+    public Map<String, Object> getJwkSet() {
+        return authService.getJwk();
     }
 
-    @PreAuthorize("hasRole('USER')")
-    @GetMapping("/auth/me")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @GetMapping("/profile")
     public ResponseEntity<Object> getUserProfile(@AuthenticationPrincipal User user) {
         User userData = authService.getUserById(user.getUserId());
-        return ResponseBuilder.build(HttpStatus.OK, null, null, "Success", userData);
+        return ResponseBuilder.build(HttpStatus.OK, null, "success", userData);
     }
 
-    @PreAuthorize("hasRole('USER')")
-    @PatchMapping("/auth/change-password")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @PatchMapping("/change-password")
     public ResponseEntity<Object> changePassword(
             @AuthenticationPrincipal User user, @Valid @RequestBody ChangePassword changePassword) {
         if (!changePassword.getNewPassword().equals(changePassword.getConfirmNewPassword())) {
             return ResponseBuilder.build(
-                    HttpStatus.BAD_REQUEST,
-                    null,
-                    "Failure",
-                    "New Password and Confirm New Password do not match",
-                    null);
+                    HttpStatus.BAD_REQUEST, null, "new password and confirm new password mismatch", null);
         }
         boolean isPasswordUpdated = authService.updatePassword(user, changePassword);
         if (!isPasswordUpdated) {
-            return ResponseBuilder.build(HttpStatus.BAD_REQUEST, null, "Failure!", "Invalid Old Password", null);
+            return ResponseBuilder.build(HttpStatus.BAD_REQUEST, null, "current password is invalid", null);
         }
-        return ResponseBuilder.build(HttpStatus.OK, null, null, "Password Changed Successfully", null);
+        return ResponseBuilder.build(HttpStatus.OK, null, "password updated", null);
     }
 
-    @PreAuthorize("hasRole('USER')")
-    @GetMapping("/auth/logout")
-    public ResponseEntity<Object> logout(HttpServletRequest request) {
-        String requestRefreshToken = CookieExtractor.getCookie(request, "refreshToken");
-        if (requestRefreshToken != null) {
-            authService.logout(requestRefreshToken);
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @GetMapping("/logout")
+    public ResponseEntity<Object> logout(@CookieValue(name = "REFRESHTOKEN", required = true) String refreshToken) {
+        if (refreshToken != null) {
+            authService.logout(refreshToken);
 
-            ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
+            ResponseCookie cookie = ResponseCookie.from("REFRESHTOKEN", "")
                     .httpOnly(true)
                     .secure(true)
                     .sameSite("Strict")
                     .path("/")
                     .maxAge(0)
                     .build();
-            return ResponseBuilder.build(HttpStatus.OK, cookie, null, "Successfully Logged Out", null);
+            return ResponseBuilder.build(HttpStatus.OK, cookie, "logged out", null);
         }
-        return ResponseBuilder.build(HttpStatus.UNAUTHORIZED, null, null, "Refresh Token Cookie Not Found", null);
+        return ResponseBuilder.build(HttpStatus.UNAUTHORIZED, null, "invalid cookie", null);
     }
 
-    @PreAuthorize("hasRole('USER')")
-    @GetMapping("/auth/logout-all")
-    public ResponseEntity<Object> logoutAll(HttpServletRequest request) {
-        String requestRefreshToken = CookieExtractor.getCookie(request, "refreshToken");
-        if (requestRefreshToken != null) {
-            authService.logoutAll(requestRefreshToken);
-            ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @GetMapping("/logout-all")
+    public ResponseEntity<Object> logoutAll(@CookieValue(name = "REFRESHTOKEN", required = true) String refreshToken) {
+        if (refreshToken != null) {
+            authService.logoutAll(refreshToken);
+            ResponseCookie cookie = ResponseCookie.from("REFRESHTOKEN", "")
                     .httpOnly(true)
                     .secure(true)
                     .sameSite("Strict")
                     .path("/")
                     .maxAge(0)
                     .build();
-            return ResponseBuilder.build(HttpStatus.OK, cookie, null, "Successfully Logged Out Of All Devices", null);
+            return ResponseBuilder.build(HttpStatus.OK, cookie, "logged out of all devices", null);
         }
-        return ResponseBuilder.build(HttpStatus.UNAUTHORIZED, null, null, "Refresh Token Cookie Not Found", null);
-    }
-
-    @GetMapping("/.well-known/jwks.json")
-    public Map<String, Object> getJwkSet() {
-        return authService.getJwk();
+        return ResponseBuilder.build(HttpStatus.UNAUTHORIZED, null, "invalid cookie", null);
     }
 }
