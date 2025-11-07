@@ -1,65 +1,53 @@
-High Level Design:
+# ChatWolf Microservices Architecture
 
-### Architecture Overview
+## System Architecture
 
-```text
-   ┌──────────────────┐
-   │ React Frontend   │
-   └───────┬──────────┘
-           │                   ┌───────────────────────┐
-   ┌───────▼──────────┐        │ Observability Stack   │
-   │ API Gateway      │        │ Prometheus + Grafana  │
-   │ (Spring Cloud)   │        │ Zipkin + Micrometer   │
-   └───────┬──────────┘        └───────────────────────┘
-           │
-  ┌────────┼──────────────────┬─────────┐
-  │        │                  │         │
-┌─▼────┐ ┌─▼────────┐ ┌───────▼────┐ ┌──▼────────┐
-│Auth  │ │   API    │ │ Socket Svc │ │ Presence  │
-│(JWT  │ │ (REST +  │ │ (Go + WS)  │ │ (Redis +  │
-│+User)│ │   DB)    │ │            │ │ Kafka)    │
-└─┬────┘ └─┬────────┘ └───┬────────┘ └────────┬──┘
-  │        │              │___________________│
-  │        │              │                   │
-  │        │    ┌─────────▼────────────┐      │
-  │        │    │   Message Consumer   │______│
-  │        │    │ (Kafka → PostgreSQL) │      │
-  │        │    └──────┬───────────────┘      │
-  │        │           │                      │
-  │        │ ┌─────────▼────────┐             │
-  │        │ │ Storage Service  │_____________│
-  │        │ │ (MinIO + REST)   │             │
-  │        │ └──────┬───────────┘             │
-  │        │        │                         │
-  │        │ ┌──────▼────────┐                │
-  │        │ │ Notification  │                │
-  │        │ │ (Mail/SMS via │________________│
-  │        │ │   Kafka)      │                │
-  │        │ └───────────────┘                │
-  │        │                                  │
-  │        │ ┌─────────────────┐              │
-  │        │ │ Search Service  │              │
-  │        │ │ (Elasticsearch) │              │
-  │        │ └─────────────────┘              │
-  │        │         │________________________│
-┌─▼────────▼─────────▼─┐
-│ Eureka Server        │
-│ (Service Discovery)  │
-└──────────────────────┘
-
+```mermaid
+flowchart TB
+    Frontend["React Frontend"]
+    Gateway["API Gateway\n(Spring Cloud)"]
+    Auth["Auth Service\n(JWT + User)"]
+    API["API Service\n(REST + DB)"]
+    Socket["Socket Service\n(Go + WS)"]
+    Presence["Presence Service\n(Redis + Kafka)"]
+    Consumer["Message Consumer\n(Kafka → PostgreSQL)"]
+    Storage["Storage Service\n(MinIO + REST)"]
+    Notif["Notification Service\n(Mail/SMS via Kafka)"]
+    Search["Search Service\n(Elasticsearch)"]
+    Obs["Observability Stack\nPrometheus + Grafana\nZipkin + Micrometer"]
+    
+    Frontend --> Gateway
+    Gateway --> Auth
+    Gateway --> API
+    Gateway --> Socket
+    Gateway --> Presence
+    
+    Socket --> Consumer
+    Presence --> Consumer
+    
+    subgraph Data["Data Layer"]
+        Consumer --> Storage
+        Storage --> Search
+        Search --> Notif
+    end
+    
+    subgraph Discovery["Service Discovery"]
+        Eureka["Eureka Server"]
+        Gateway --> Eureka
+        Auth --> Eureka
+        API --> Eureka
+        Socket --> Eureka
+        Presence --> Eureka
+    end
+    
+    subgraph Monitoring["Monitoring"]
+        Gateway --> Obs
+        Auth --> Obs
+        API --> Obs
+        Socket --> Obs
+        Presence --> Obs
+    end
 ```
-
-Services (brief):
-- Auth Service — JWT, user management
-- API Service — Core REST APIs, DB
-- Socket Service — Real-time messaging (Go, WebSocket)
-- Presence Service — Online status (Redis + Kafka)
-- Message Consumer — Persist messages from Kafka to Postgres
-- Storage Service — File uploads (MinIO + REST)
-- Notification Service — Email/SMS (via Kafka)
-- Search Service — Elasticsearch for message search
-- Eureka — Service discovery
-- Observability — Prometheus, Grafana, Zipkin, Micrometer
 
 
 Microservices:
