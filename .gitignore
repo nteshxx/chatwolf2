@@ -47,3 +47,15 @@ grafana-dashboards/
 
 ### Docker ###
 backups/
+
+### Temporary files ###
+*/tmp
+*.tmp
+
+### GO ###
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.out
