@@ -54,7 +54,7 @@ services:
       eureka:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://gateway:8080/actuator/health | grep -q 'UP' || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://gateway:7000/actuator/health | grep -q 'UP' || exit 1"]
       interval: 20s
       timeout: 5s
       retries: 10
@@ -130,7 +130,7 @@ services:
     image: grafana/promtail:3.5
     container_name: promtail
     ports:
-      - "9092:9092"
+      - "9080:9080"
     volumes:
       - ./promtail-config.yml:/etc/promtail/config.yml
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
@@ -343,6 +343,50 @@ services:
     networks:
       - chatwolf-network
 
+  # Apache Kafka
+  kafka:
+    image: apache/kafka:4.1.0
+    container_name: kafka
+    user: root
+    ports:
+      - "9092:9092"
+      - "9999:9999"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENERS: PLAINTEXT://kafka:9092,CONTROLLER://kafka:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_NUM_PARTITIONS: ${KAFKA_NUM_PARTITIONS}
+      KAFKA_DEFAULT_REPLICATION_FACTOR: ${KAFKA_DEFAULT_REPLICATION_FACTOR:-1}
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: ${KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR}
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: ${KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR}
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: ${KAFKA_TRANSACTION_STATE_LOG_MIN_ISR}
+      KAFKA_MIN_INSYNC_REPLICAS: ${KAFKA_MIN_INSYNC_REPLICAS}
+      KAFKA_LOG_RETENTION_HOURS: ${KAFKA_LOG_RETENTION_HOURS}
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      KAFKA_METADATA_LOG_DIR: /var/lib/kafka/metadata
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: ${KAFKA_AUTO_CREATE_TOPICS_ENABLE}
+      KAFKA_HEAP_OPTS: ${KAFKA_HEAP_OPTS}
+      KAFKA_JMX_PORT: ${KAFKA_JMX_PORT}
+      KAFKA_JMX_HOSTNAME: ${KAFKA_JMX_HOSTNAME}
+      CLUSTER_ID: ${KRAFT_CLUSTER_ID}
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+      - kafka-metadata:/var/lib/kafka/metadata
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server kafka:9092 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - chatwolf-network
+
 volumes:
   loki-data:
     driver: local
@@ -357,6 +401,10 @@ volumes:
   postgres-data:
     driver: local
   postgres-logs:
+    driver: local
+  kafka-data:
+    driver: local
+  kafka-metadata:
     driver: local
 
 networks:
