@@ -19,9 +19,10 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://eureka:8761/actuator/health | grep -q 'UP' || exit 1"]
-      interval: 20s
-      timeout: 5s
-      retries: 10
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 60s
     logging:
       driver: "json-file"
       options:
@@ -113,7 +114,7 @@ services:
     ports:
       - "3100:3100"
     volumes:
-      - ./loki-config.yml:/etc/loki/local-config.yaml
+      - ./config/loki-config.yml:/etc/loki/local-config.yaml
       - loki-data:/loki
     command: ["-config.file=/etc/loki/local-config.yaml"]
     healthcheck:
@@ -125,21 +126,33 @@ services:
     networks:
       - chatwolf-network
 
-  # Promtail - Log shipper (collects logs from containers)
-  promtail:
-    image: grafana/promtail:3.5
-    container_name: promtail
+  # Alloy - Log, Metric, and Trace Collector
+  alloy:
+    image: grafana/alloy:v1.11.3
+    container_name: alloy
     ports:
-      - "9080:9080"
+      - "12345:12345"
+    environment:
+      TZ: UTC
+      HOSTNAME: alloy
+      LOKI_URL: ${LOKI_URL}
     volumes:
-      - ./promtail-config.yml:/etc/promtail/config.yml
+      - ./config/alloy-config.alloy:/etc/alloy/config.alloy:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
-    command: ["-config.file=/etc/promtail/config.yml"]
+      - alloy-data:/var/lib/alloy
+    command: ["run", "--server.http.listen-addr=0.0.0.0:12345", "--storage.path=/var/lib/alloy",
+      "--stability.level=public-preview", "/etc/alloy/config.alloy"]
     depends_on:
       loki:
         condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://alloy:12345/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     networks:
       - chatwolf-network
 
@@ -150,7 +163,7 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus-data:/prometheus
     command: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.path=/prometheus"]
     healthcheck:
@@ -201,9 +214,8 @@ services:
       GF_SESSION_PROVIDER_CONFIG: "dbname=${GRAFANA_DB_NAME} user=${GRAFANA_DB_USER} password=${GRAFANA_DB_PASSWORD} host=postgres port=5432 sslmode=disable"
     volumes:
       - grafana-data:/var/lib/grafana
-      - ./grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
-      - ./grafana-dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml
-      - ./grafana-dashboards:/etc/grafana/provisioning/dashboards
+      - ./config/grafana/provisioning:/etc/grafana/provisioning
+      - ./config/grafana/dashboards:/etc/grafana/dashboards
     depends_on:
       postgres:
         condition: service_healthy
@@ -230,7 +242,7 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
     volumes:
       - redis-data:/data
-      - ./redis.conf:/usr/local/etc/redis/redis.conf
+      - ./config/redis.conf:/usr/local/etc/redis/redis.conf
     command: ["redis-server", "/usr/local/etc/redis/redis.conf", "--requirepass", "${REDIS_PASSWORD}"]
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
@@ -328,7 +340,7 @@ services:
       - postgres-data:/var/lib/postgresql/data
       - postgres-logs:/var/log/postgresql
       - ./backups:/backups
-      - ./init-scripts:/docker-entrypoint-initdb.d
+      - ./config/postgres/init-scripts:/docker-entrypoint-initdb.d
     command: ["postgres","-c", "max_connections=200","-c", "shared_buffers=256MB", 
       "-c", "effective_cache_size=1GB", "-c", "maintenance_work_mem=64MB",
       "-c", "random_page_cost=1.1", "-c", "log_statement=all", "-c", "log_duration=on"
@@ -389,23 +401,15 @@ services:
 
 volumes:
   loki-data:
-    driver: local
   prometheus-data:
-    driver: local
+  alloy-data:
   grafana-data:
-    driver: local
   redis-data:
-    driver: local
   elasticsearch-data:
-    driver: local
   postgres-data:
-    driver: local
   postgres-logs:
-    driver: local
   kafka-data:
-    driver: local
   kafka-metadata:
-    driver: local
 
 networks:
   chatwolf-network:

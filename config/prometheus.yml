@@ -1,0 +1,29 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'eureka'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['eureka:8761']
+        labels:
+          application: 'eureka'
+
+  - job_name: 'gateway'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['gateway:7000']
+        labels:
+          application: 'gateway'
+
+  - job_name: 'auth'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['auth:7100']
+        labels:
+          application: 'auth'
+
+  # Scrape Alloy's own metrics
+  - job_name: 'alloy'
+    static_configs:
+      - targets: ['alloy:12345']
