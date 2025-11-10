@@ -1,6 +1,7 @@
 package eureka
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/hudl/fargo"
@@ -16,15 +17,19 @@ func RegisterWithEureka(eurekaURL, appName, host string, port int) (func(), erro
 		App:            appName,
 		HostName:       host,
 		IPAddr:         host,
+		VipAddress:     appName,
 		Port:           port,
 		Status:         fargo.UP,
-		StatusPageUrl:  "http://" + host + ":7200/health",
-		HealthCheckUrl: "http://" + host + ":7200/health",
+		StatusPageUrl:  "http://" + host + ":" + strconv.Itoa(port) + "/health",
+		HealthCheckUrl: "http://" + host + ":" + strconv.Itoa(port) + "/health",
 		DataCenterInfo: fargo.DataCenterInfo{
 			Class: "com.netflix.appinfo.InstanceInfo$DefaultDataCenterInfo",
 			Name:  "MyOwn",
 		},
 	}
+
+	instance.SetMetadataString("ws-enabled", "true")
+	instance.SetMetadataString("ws-path", "/socket/connect")
 
 	// Register the instance with Eureka
 	if err := conn.RegisterInstance(&instance); err != nil {
