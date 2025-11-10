@@ -45,7 +45,7 @@ func main() {
 	}
 
 	// Kafka producer
-	kafkaProducer, err := kafka.NewKafkaProducer(cfg.KafkaBrokers, cfg.KafkaTopic, cfg.Debug)
+	kafkaProducer, err := kafka.NewKafkaProducer(cfg.KafkaBrokers, cfg.KafkaTopic)
 	if err != nil {
 		utils.Log.Fatal().Err(err).Msg("failed to create kafka producer")
 	}

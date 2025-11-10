@@ -13,7 +13,7 @@ type KafkaProducer struct {
 	topic         string
 }
 
-func NewKafkaProducer(brokers []string, topic string, debug bool) (*KafkaProducer, error) {
+func NewKafkaProducer(brokers []string, topic string) (*KafkaProducer, error) {
 	config := sarama.NewConfig()
 	config.Producer.Return.Successes = false
 	config.Producer.Return.Errors = true
