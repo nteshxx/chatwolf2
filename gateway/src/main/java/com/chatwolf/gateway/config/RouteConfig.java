@@ -50,15 +50,16 @@ public class RouteConfig {
                                 .circuitBreaker(cb ->
                                         cb.setName("authCircuitBreaker").setFallbackUri("forward:/fallback/auth")))
                         .uri("lb://auth"))
-                .route("socket", r -> r.path("/api/v1/socket/connect")
+                .route("socket", r -> r.path("/api/v1/socket/connect/**")
                         .filters(f -> f.stripPrefix(2)
+                                .preserveHostHeader()
                                 .requestRateLimiter(config -> {
                                     config.setKeyResolver(userIdKeyResolver());
                                     config.setRateLimiter(socketRateLimiter());
                                 })
                                 .circuitBreaker(cb ->
                                         cb.setName("socketCircuitBreaker").setFallbackUri("forward:/fallback/socket")))
-                        .uri("lb://socket"))
+                        .uri("lb:ws://socket"))
                 .build();
     }
 }
