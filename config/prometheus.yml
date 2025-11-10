@@ -23,6 +23,13 @@ scrape_configs:
         labels:
           application: 'auth'
 
+  - job_name: 'socket'
+    metrics_path: '/prometheus/metrics'
+    static_configs:
+      - targets: ['socket:7200']
+        labels:
+          application: 'socket'
+
   # Scrape Alloy's own metrics
   - job_name: 'alloy'
     static_configs:

@@ -74,8 +74,8 @@ func main() {
 	// Setup HTTP routes
 	mux := http.NewServeMux()
 	mux.HandleFunc("/socket/connect", wsServer.HandleWS)
-	mux.Handle("/socket/metrics", promhttp.Handler())
-	mux.HandleFunc("/socket/health", func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("/prometheus/metrics", promhttp.Handler())
+	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("{ \"status\": \"UP\" }"))
 	})

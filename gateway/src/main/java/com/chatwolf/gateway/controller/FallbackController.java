@@ -22,4 +22,13 @@ public class FallbackController {
         return Mono.just(
                 ResponseBuilder.build(HttpStatus.SERVICE_UNAVAILABLE, "auth service temporarily unavailable", null));
     }
+
+    @RequestMapping(
+            value = "/socket",
+            method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PATCH})
+    public Mono<ResponseEntity<Object>> socketFallback() {
+        log.warn("Socket service fallback triggered");
+        return Mono.just(
+                ResponseBuilder.build(HttpStatus.SERVICE_UNAVAILABLE, "socket service temporarily unavailable", null));
+    }
 }

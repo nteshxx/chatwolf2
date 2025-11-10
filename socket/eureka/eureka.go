@@ -15,11 +15,11 @@ func RegisterWithEureka(eurekaURL, appName, host string, port int) (func(), erro
 	instance := fargo.Instance{
 		App:            appName,
 		HostName:       host,
-		IPAddr:         "127.0.0.1",
+		IPAddr:         host,
 		Port:           port,
 		Status:         fargo.UP,
-		StatusPageUrl:  "http://" + host + ":7200/socket/health",
-		HealthCheckUrl: "http://" + host + ":7200/socket/health",
+		StatusPageUrl:  "http://" + host + ":7200/health",
+		HealthCheckUrl: "http://" + host + ":7200/health",
 		DataCenterInfo: fargo.DataCenterInfo{
 			Class: "com.netflix.appinfo.InstanceInfo$DefaultDataCenterInfo",
 			Name:  "MyOwn",

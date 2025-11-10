@@ -32,8 +32,10 @@ func envOrDefault(key, def string) string {
 func LoadFromEnv() *Config {
 	port, _ := strconv.Atoi(envOrDefault("SOCKET_PORT", "7200"))
 	db, _ := strconv.Atoi(envOrDefault("REDIS_DB", "0"))
-	kafkaBrokersEnv := envOrDefault("KAFKA_BROKERS", "localhost:9092")
-	kafkaBrokers := strings.Split(kafkaBrokersEnv, ",")
+	redisHost := envOrDefault("REDIS_HOST", "localhost")
+	redisPort := envOrDefault("REDIS_PORT", "6379")
+	redisAddress := redisHost + ":" + redisPort
+	kafkaBrokers := strings.Split(envOrDefault("KAFKA_BROKERS", "localhost:9092"), ",")
 
 	return &Config{
 		AppName:       envOrDefault("APP_NAME", "socket"),
@@ -42,7 +44,7 @@ func LoadFromEnv() *Config {
 		JWKSURL:       envOrDefault("JWKS_URL", "http://localhost:7100/auth/.well-known/jwks.json"),
 		KafkaBrokers:  kafkaBrokers,
 		KafkaTopic:    envOrDefault("KAFKA_TOPIC", "chat-messages"),
-		RedisAddr:     envOrDefault("REDIS_ADDR", "localhost:6379"),
+		RedisAddr:     redisAddress,
 		RedisPassword: envOrDefault("REDIS_PASSWORD", "strongredispassword"),
 		RedisDB:       db,
 		ZipkinURL:     envOrDefault("ZIPKIN_URL", "http://localhost:9411/api/v2/spans"),

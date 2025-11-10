@@ -43,7 +43,7 @@ services:
       JAVA_OPTS: ${JAVA_OPTS}
       SPRING_PROFEILE: ${SPRING_PROFILE}
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: ${EUREKA_SERVER_URL}
-      JWK_SET_URI: ${JWK_SET_URI}
+      JWKS_URL: ${JWKS_URL}
       REDIS_HOST: ${REDIS_HOST}
       REDIS_PORT: ${REDIS_PORT}
       REDIS_TIMEOUT: ${REDIS_TIMEOUT}
@@ -56,9 +56,10 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://gateway:7000/actuator/health | grep -q 'UP' || exit 1"]
-      interval: 20s
+      interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 5
+      start_period: 60s
     logging:
       driver: "json-file"
       options:
@@ -106,7 +107,49 @@ services:
     restart: unless-stopped
     networks:
       - chatwolf-network
-  
+
+  # Socket Service
+  socket:
+    build: ./socket/
+    image: socket:1.0.0
+    container_name: socket
+    ports:
+      - "7200:7200"
+    environment:
+      HOST_NAME: "socket"
+      REDIS_DB: ${REDIS_DB}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      JWKS_URL: ${JWKS_URL}
+      KAFKA_BROKERS: ${KAFKA_BROKERS}
+      KAFKA_TOPIC: ${KAFKA_TOPIC_CHAT_MESSAGES}
+      ZIPKIN_URL: ${ZIPKIN_ENDPOINT}
+      EUREKA_URL: ${EUREKA_SERVER_URL}
+    depends_on:
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      eureka:
+        condition: service_healthy
+      auth:
+       condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://socket:7200/health | grep -q 'UP' || exit 1"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+      start_period: 60s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+    networks:
+      - chatwolf-network
+
   # Loki - Log aggregation
   loki:
     image: grafana/loki:3.5
