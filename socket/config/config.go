@@ -32,12 +32,11 @@ func envOrDefault(key, def string) string {
 func LoadFromEnv() *Config {
 	port, _ := strconv.Atoi(envOrDefault("SOCKET_PORT", "7200"))
 	db, _ := strconv.Atoi(envOrDefault("REDIS_DB", "0"))
-	debug := envOrDefault("DEBUG", "false") == "true"
 	kafkaBrokersEnv := envOrDefault("KAFKA_BROKERS", "localhost:9092")
 	kafkaBrokers := strings.Split(kafkaBrokersEnv, ",")
 
 	return &Config{
-		AppName:       envOrDefault("APP_NAME", "socket-service"),
+		AppName:       envOrDefault("APP_NAME", "socket"),
 		Port:          port,
 		HostName:      envOrDefault("HOST_NAME", "localhost"),
 		JWKSURL:       envOrDefault("JWKS_URL", "http://localhost:7100/auth/.well-known/jwks.json"),
@@ -48,6 +47,5 @@ func LoadFromEnv() *Config {
 		RedisDB:       db,
 		ZipkinURL:     envOrDefault("ZIPKIN_URL", "http://localhost:9411/api/v2/spans"),
 		EurekaURL:     envOrDefault("EUREKA_URL", "http://localhost:8761/eureka"),
-		Debug:         debug,
 	}
 }

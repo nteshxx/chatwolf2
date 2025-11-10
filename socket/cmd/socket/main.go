@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/nteshxx/chatwolf2/socket/config"
-	"github.com/nteshxx/chatwolf2/socket/internal/eureka"
+	"github.com/nteshxx/chatwolf2/socket/eureka"
 	"github.com/nteshxx/chatwolf2/socket/internal/kafka"
 	"github.com/nteshxx/chatwolf2/socket/internal/metrics"
 	auth "github.com/nteshxx/chatwolf2/socket/internal/middlewares"
@@ -25,7 +25,7 @@ func main() {
 	cfg := config.LoadFromEnv()
 
 	// Init logger
-	utils.InitLogger(cfg.Debug)
+	utils.InitLogger()
 	utils.Log.Info().Msg("starting socket service")
 
 	// Init zipkin tracer
@@ -68,18 +68,16 @@ func main() {
 	// Register with Eureka
 	deregister, err := eureka.RegisterWithEureka(cfg.EurekaURL, cfg.AppName, cfg.HostName, cfg.Port)
 	if err != nil {
-		utils.Log.Warn().Err(err).Msg("eureka register failed")
-	} else {
-		defer deregister()
+		utils.Log.Fatal().Err(err).Msg("failed to register with eureka")
 	}
 
 	// Setup HTTP routes
 	mux := http.NewServeMux()
-	mux.HandleFunc("/ws", wsServer.HandleWS)
-	mux.Handle("/metrics", promhttp.Handler())
-	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/socket/connect", wsServer.HandleWS)
+	mux.Handle("/socket/metrics", promhttp.Handler())
+	mux.HandleFunc("/socket/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("UP"))
+		w.Write([]byte("{ \"status\": \"UP\" }"))
 	})
 
 	// Create HTTP server
@@ -117,6 +115,9 @@ func main() {
 
 	utils.Log.Info().Msg("initiating graceful shutdown")
 
+	// Deregister from Eureka
+	deregister()
+
 	// Shutdown HTTP server (stops accepting new connections)
 	if err := httpServer.Shutdown(shutdownCtx); err != nil {
 		utils.Log.Error().Err(err).Msg("http server shutdown failed")
@@ -128,9 +129,7 @@ func main() {
 		utils.Log.Error().Err(err).Msg("websocket server shutdown failed")
 	}
 
-	// Close other resources
 	kafkaProducer.Close()
 	redisHub.Close()
-
 	utils.Log.Info().Msg("server shutdown complete")
 }
