@@ -4,8 +4,6 @@ services:
     build: ./eureka/
     image: eureka:1.0.0
     container_name: eureka
-    ports:
-      - "8761:8761"
     environment:
       JAVA_OPTS: ${JAVA_OPTS}
       SPRING_PROFEILE: ${SPRING_PROFILE}
@@ -348,6 +346,20 @@ services:
       retries: 5
       start_period: 60s
     restart: unless-stopped
+    networks:
+      - chatwolf-network
+
+  # Zipkin Dependencies - Generates dependency graph
+  zipkin-dependencies:
+    image: openzipkin/zipkin-dependencies:3.2
+    container_name: zipkin-dependencies
+    environment:
+      STORAGE_TYPE: elasticsearch
+      ES_HOSTS: elasticsearch:9200
+    restart: unless-stopped
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
     networks:
       - chatwolf-network
 
