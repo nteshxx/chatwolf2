@@ -1,15 +1,19 @@
 # Build stage
 FROM gradle:9-jdk21-alpine AS builder
 
-WORKDIR /build
+WORKDIR /home/gradle
 
 COPY build.gradle settings.gradle ./
+
+COPY gradle ./gradle
+
+RUN gradle --no-daemon dependencies
 
 COPY src ./src
 
 RUN gradle :spotlessApply
 
-RUN gradle clean build -x test
+RUN gradle clean build -x test --no-daemon --parallel --build-cache
 
 # Runtime stage
 FROM eclipse-temurin:21-jre-alpine
@@ -20,7 +24,7 @@ LABEL description="Eureka Server - Service Discovery"
 WORKDIR /app
 
 # Copy built JAR from builder stage
-COPY --from=builder /build/build/libs/*.jar eureka.jar
+COPY --from=builder /home/gradle/build/libs/*.jar eureka.jar
 
 # Expose Eureka default port
 EXPOSE 8761
