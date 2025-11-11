@@ -49,6 +49,7 @@ services:
       REDIS_TIMEOUT: ${REDIS_TIMEOUT}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       ZIPKIN_ENDPOINT: ${ZIPKIN_ENDPOINT}
+      ZIPKIN_SAMPLING_RATE: ${ZIPKIN_SAMPLING_RATE}
     depends_on:
       redis:
         condition: service_healthy
@@ -89,6 +90,7 @@ services:
       JWT_REFRESH_EXPIRATION_DAYS: ${JWT_REFRESH_EXPIRATION_DAYS}
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: ${EUREKA_SERVER_URL}      
       ZIPKIN_ENDPOINT: ${ZIPKIN_ENDPOINT}
+      ZIPKIN_SAMPLING_RATE: ${ZIPKIN_SAMPLING_RATE}
     depends_on:
       postgres:
         condition: service_healthy
@@ -124,8 +126,9 @@ services:
       JWKS_URL: ${JWKS_URL}
       KAFKA_BROKERS: ${KAFKA_BROKERS}
       KAFKA_TOPIC: ${KAFKA_TOPIC_CHAT_MESSAGES}
-      ZIPKIN_URL: ${ZIPKIN_ENDPOINT}
       EUREKA_URL: ${EUREKA_SERVER_URL}
+      ZIPKIN_URL: ${ZIPKIN_ENDPOINT}
+      ZIPKIN_SAMPLING_RATE: ${ZIPKIN_SAMPLING_RATE}
     depends_on:
       redis:
         condition: service_healthy
