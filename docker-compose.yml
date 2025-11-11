@@ -323,12 +323,6 @@ services:
         condition: service_healthy
     networks:
       - chatwolf-network
-    labels:
-      - "com.chatwolf.description=Zipkin distributed tracing server"
-      - "com.chatwolf.environment=production"
-      - "prometheus.scrape=true"
-      - "prometheus.port=9411"
-      - "prometheus.path=/prometheus"
 
   # Elasticsearch - Storage for Zipkin
   elasticsearch:
@@ -345,13 +339,6 @@ services:
       cluster.name: zipkin-cluster
       node.name: zipkin-node-1
       bootstrap.memory_lock: true
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-      nofile:
-        soft: 65536
-        hard: 65536
     volumes:
       - elasticsearch-data:/usr/share/elasticsearch/data
     healthcheck:
