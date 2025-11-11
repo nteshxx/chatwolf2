@@ -1,17 +1,16 @@
 package com.chatwolf.auth.config;
 
+import io.micrometer.tracing.exporter.SpanExportingPredicate;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.observation.SecurityObservationSettings;
 
-import io.micrometer.tracing.exporter.SpanExportingPredicate;
-
 @Configuration
 public class TracingConfig {
-	
-	@Bean
+
+    @Bean
     SecurityObservationSettings noSpringSecurityObservations() {
-    	return SecurityObservationSettings.noObservations();
+        return SecurityObservationSettings.noObservations();
     }
 
     @Bean
