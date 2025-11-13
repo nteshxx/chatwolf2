@@ -255,8 +255,8 @@ services:
       GF_SESSION_PROVIDER_CONFIG: "dbname=${GRAFANA_DB_NAME} user=${GRAFANA_DB_USER} password=${GRAFANA_DB_PASSWORD} host=postgres port=5432 sslmode=disable"
     volumes:
       - grafana-data:/var/lib/grafana
-      - ./config/grafana/provisioning:/etc/grafana/provisioning
-      - ./config/grafana/dashboards:/etc/grafana/dashboards
+      - ./config/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./config/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
     depends_on:
       postgres:
         condition: service_healthy
