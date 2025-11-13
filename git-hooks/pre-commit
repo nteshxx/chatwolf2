@@ -56,8 +56,12 @@ if [ $FAILED -eq 1 ]; then
     exit 1
 fi
 
-# Stage all formatted files
-git add -A
+# Stage only the files that were originally staged and may have been formatted
+echo "$CHANGED_FILES" | while read -r file; do
+    if [ -f "$ROOT_DIR/$file" ]; then
+        git add "$ROOT_DIR/$file"
+    fi
+done
 
 echo ""
 echo "✅ All services formatted successfully!"
