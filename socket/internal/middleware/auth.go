@@ -3,7 +3,6 @@ package middleware
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/MicahParks/keyfunc/v3"
 	"github.com/golang-jwt/jwt/v5"
@@ -15,17 +14,7 @@ type AuthService struct {
 }
 
 func NewAuthService(ctx context.Context, jwksURL string) (*AuthService, error) {
-	override := keyfunc.Override{
-		RefreshInterval:  24 * time.Hour,
-		RateLimitWaitMax: 0,
-		RefreshErrorHandlerFunc: func(u string) func(ctx context.Context, err error) {
-			return func(ctx context.Context, err error) {
-				// Log error but don't fail
-			}
-		},
-	}
-
-	jwks, err := keyfunc.NewDefaultOverrideCtx(ctx, []string{jwksURL}, override)
+	jwks, err := keyfunc.NewDefaultCtx(ctx, []string{jwksURL})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create JWKS: %w", err)
 	}
