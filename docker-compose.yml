@@ -98,9 +98,10 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://auth:7100/actuator/health | grep -q 'UP' || exit 1"]
-      interval: 20s
-      timeout: 5s
-      retries: 10
+      interval: 15s
+      timeout: 3s
+      retries: 3
+      start_period: 60s
     logging:
       driver: "json-file"
       options:
