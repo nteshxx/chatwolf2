@@ -16,8 +16,6 @@ import (
 	"github.com/nteshxx/chatwolf2/socket/internal/observability/metrics"
 	"github.com/nteshxx/chatwolf2/socket/internal/observability/tracing"
 	apperrors "github.com/nteshxx/chatwolf2/socket/pkg/errors"
-	"github.com/openzipkin/zipkin-go"
-	zipkinprop "github.com/openzipkin/zipkin-go/propagation/b3"
 )
 
 var upgrader = websocket.Upgrader{
@@ -40,14 +38,11 @@ type Server struct {
 	presenceHandler PresencePublisher
 	log             *logger.Logger
 	metrics         *metrics.Metrics
-	tracer          *tracing.Tracer
-
-	clientsMu sync.RWMutex
-	clients   map[string]map[string]*Client // userID -> connectionID -> Client
-
-	wg     sync.WaitGroup
-	ctx    context.Context
-	cancel context.CancelFunc
+	clientsMu       sync.RWMutex
+	clients         map[string]map[string]*Client // userID -> connectionID -> Client
+	wg              sync.WaitGroup
+	ctx             context.Context
+	cancel          context.CancelFunc
 }
 
 func NewServer(
@@ -66,26 +61,14 @@ func NewServer(
 		presenceHandler: presenceHandler,
 		log:             log,
 		metrics:         metrics,
-		tracer:          tracer,
 		clients:         make(map[string]map[string]*Client),
 		ctx:             ctx,
 		cancel:          cancel,
 	}
 }
 
-func (s *Server) HandleConnection(w http.ResponseWriter, r *http.Request, tracer *zipkin.Tracer) {
+func (s *Server) HandleConnection(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-
-	extractor := zipkinprop.ExtractHTTP(r)
-	parentCtx, err := extractor()
-	if err != nil {
-		s.log.Warn(ctx, "failed to extract B3 context", map[string]interface{}{
-			"error": err.Error(),
-		})
-	}
-
-	span := tracer.StartSpan("websocket-handshake", zipkin.Parent(*parentCtx))
-	defer span.Finish()
 
 	token := r.URL.Query().Get("token")
 	if token == "" {
@@ -99,14 +82,13 @@ func (s *Server) HandleConnection(w http.ResponseWriter, r *http.Request, tracer
 		s.log.Warn(ctx, "unauthorized ws connection attempt", map[string]interface{}{
 			"error": err.Error(),
 		})
-		span.Tag("error", "unauthorized")
+
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		span.Tag("error", err.Error())
 		s.log.Error(ctx, "upgrade failed", err)
 		return
 	}
@@ -130,7 +112,6 @@ func (s *Server) HandleConnection(w http.ResponseWriter, r *http.Request, tracer
 
 	if err := s.presenceHandler.PublishPresence(ctx, presenceEvent); err != nil {
 		s.log.Error(ctx, "failed to publish presence", err)
-		span.Tag("ws.status", "disconnected")
 	}
 
 	// Start pumps

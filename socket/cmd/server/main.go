@@ -128,9 +128,7 @@ func main() {
 	router.Use(middleware.Logging(log, loggingCfg))
 
 	// WebSocket endpoint
-	router.HandleFunc("/socket/connect", func(w http.ResponseWriter, r *http.Request) {
-		wsServer.HandleConnection(w, r, tracer.Tracer())
-	})
+	router.HandleFunc("/socket/connect", wsServer.HandleConnection)
 
 	// Metrics endpoint
 	router.Handle("/prometheus/metrics", promhttp.Handler()).Methods("GET")
