@@ -1,21 +1,21 @@
 FROM golang:1.25-alpine AS builder
 
-WORKDIR /build
+WORKDIR /app
 
-COPY go.* ./
-
+COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-
-RUN go build -o /build/bin/socket ./cmd/main
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o socket ./cmd/server
 
 FROM alpine:3.22
 
 RUN apk add --no-cache ca-certificates
 
-COPY --from=builder /build/bin/socket /bin/socket
+WORKDIR /root/
+
+COPY --from=builder /app/socket .
 
 EXPOSE 7200
 
-ENTRYPOINT ["/bin/socket"]
+CMD ["./socket"]

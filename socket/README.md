@@ -1,90 +1,144 @@
-# Socket Service
+# WebSocket Service
 
-![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go)
-![Redis](https://img.shields.io/badge/Redis-00A0A0?style=flat&logo=redis)
-![Kafka](https://img.shields.io/badge/Kafka-231F20?style=flat&logo=apache-kafka)
-
-A WebSocket service built in Go with distributed messaging capabilities and modern observability features.
+Production-ready WebSocket service for real-time messaging.
 
 ## Features
 
-### Core Functionality
-- WebSocket endpoint at `/ws`
-- JWT authentication using JWKS from Auth Service
-- Real-time message broadcasting
-- Presence tracking
+- Real-time bidirectional communication via WebSocket
+- JWT-based authentication
+- Distributed tracing with Zipkin
+- Prometheus metrics
+- Service discovery with Eureka
+- Redis pub/sub for cross-instance messaging
+- Kafka integration for message persistence
+- Graceful shutdown
+- Structured logging with trace correlation
 
-### Integration
-- Message publishing to Kafka topics
-- Redis-based message distribution
-- Eureka service registration
-- OpenTelemetry integration with Zipkin
+## Architecture
 
-### Monitoring
-- Prometheus metrics exposure
-- Distributed tracing
-- Health checks
+- **Domain Layer**: Business entities and models
+- **Service Layer**: Business logic
+- **Repository Layer**: Data access (Kafka, Redis)
+- **Transport Layer**: WebSocket and HTTP handlers
+- **Middleware**: Auth, logging, tracing
+- **Observability**: Logging, metrics, tracing
 
-## Quick Start
+## Getting Started
 
 ### Prerequisites
-- Docker
-- Docker Compose
-- Go 1.21+
 
-### Building
+- Go 1.21+
+- Redis
+- Kafka
+- Zipkin (optional)
+- Eureka (optional)
+
+### Installation
+
 ```bash
-docker build -t socket-service:local .
+go mod download
 ```
 
 ### Configuration
 
-#### Environment Variables
-| Variable | Description | Required |
-|----------|-------------|----------|
-| JWKS_URL | URL for JWT Key Set | Yes |
-| KAFKA_BROKERS | Kafka broker addresses | Yes |
-| KAFKA_TOPIC | Target Kafka topic | Yes |
-| REDIS_ADDR | Redis server address | Yes |
-| ZIPKIN_URL | Zipkin server URL | Yes |
-| EUREKA_URL | Eureka server URL | Yes |
-| APP_NAME | Service name | Yes |
-| HOST_NAME | Host name | Yes |
-| SOCKET_ADDR | Socket binding address | Yes |
+Copy `.env.example` to `.env` and adjust values.
 
 ### Running
 
-1. Start the required services:
 ```bash
-docker-compose up -d
+make run
 ```
 
-2. Verify the service is running:
+### Building
+
 ```bash
-curl http://localhost:8080/health
+make build
 ```
 
-## Monitoring
+### Docker
 
-- Metrics: `/metrics`
-- Health: `/health`
-- Traces: Available in Zipkin UI
-
-## Architecture
-
-```mermaid
-graph LR
-    Client[Client] --> WS[WebSocket /ws]
-    WS --> Redis[Redis PubSub]
-    WS --> Kafka[Kafka Topic]
-    WS --> Zipkin[Zipkin Tracing]
-    WS --> Prometheus[Prometheus Metrics]
+```bash
+make docker-build
+make docker-run
 ```
 
-## Contributing
+## API Endpoints
 
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+### WebSocket
+
+- `ws://localhost:7200/socket/connect?token=<JWT>`
+
+### HTTP
+
+- `GET /health` - Health check
+- `GET /prometheus/metrics` - Prometheus metrics
+
+## WebSocket Protocol
+
+### Client → Server
+
+```json
+{
+  "type": "message.send",
+  "clientMsgId": "uuid",
+  "to": "userId",
+  "conversationId": "uuid",
+  "content": "message text",
+  "attachmentUrl": "https://..."
+}
+```
+
+### Server → Client
+
+#### Message Acknowledgment
+```json
+{
+  "type": "message.ack",
+  "data": {
+    "clientMsgId": "uuid",
+    "serverMsgId": "uuid",
+    "conversationId": "uuid",
+    "sentAt": "2024-01-01T00:00:00Z"
+  }
+}
+```
+
+#### Incoming Message
+```json
+{
+  "type": "message.create",
+  "data": {
+    "eventId": "uuid",
+    "clientMsgId": "uuid",
+    "from": "userId",
+    "to": "userId",
+    "conversationId": "uuid",
+    "content": "message text",
+    "attachmentUrl": "https://...",
+    "sentAt": "2024-01-01T00:00:00Z"
+  }
+}
+```
+
+## Best Practices Implemented
+
+1. **Context Propagation**: Context passed as first parameter in all functions
+2. **Structured Logging**: Unified logger with trace correlation
+3. **Error Handling**: Custom error types with context
+4. **Dependency Injection**: Loose coupling, easy testing
+5. **Graceful Shutdown**: Proper cleanup on SIGTERM/SIGINT
+6. **Configuration**: Environment-based with validation
+7. **Observability**: Metrics, logging, distributed tracing
+8. **Thread Safety**: Proper mutex usage
+9. **Resource Management**: Defer cleanup, context cancellation
+10. **Code Organization**: Clear separation of concerns
+
+## Testing
+
+```bash
+make test
+```
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT
