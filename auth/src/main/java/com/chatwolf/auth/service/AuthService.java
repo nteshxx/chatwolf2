@@ -47,7 +47,7 @@ public class AuthService {
     private UserService userService;
 
     @Transactional
-    public AuthRespone register(Register signupDetails, Role role) {
+    public AuthRespone register(Register signupDetails) {
         Optional<User> existingUser = userService.checkIfUserExists(signupDetails.getEmail());
         if (existingUser.isPresent()) {
             throw new BadRequestException("email already registered");

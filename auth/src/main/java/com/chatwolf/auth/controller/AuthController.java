@@ -1,6 +1,5 @@
 package com.chatwolf.auth.controller;
 
-import com.chatwolf.auth.constant.Role;
 import com.chatwolf.auth.dto.AuthRespone;
 import com.chatwolf.auth.dto.ChangePassword;
 import com.chatwolf.auth.dto.Login;
@@ -42,7 +41,7 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<Object> signup(@Valid @RequestBody Register signupDetails) {
-        AuthRespone data = authService.register(signupDetails, Role.ADMIN);
+        AuthRespone data = authService.register(signupDetails);
         ResponseCookie cookie = ResponseCookie.from(
                         "REFRESHTOKEN", data.getToken().getRefreshToken())
                 .httpOnly(true)
