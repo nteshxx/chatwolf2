@@ -26,7 +26,7 @@ func NewProducer(ctx context.Context, brokers []string, topic string, log *logge
 	config.Producer.RequiredAcks = sarama.WaitForLocal
 	config.Producer.Retry.Max = 5
 	config.Producer.Retry.Backoff = 100 * time.Millisecond
-	config.Producer.Compression = sarama.CompressionSnappy
+	config.Producer.Compression = sarama.CompressionGZIP
 
 	p, err := sarama.NewAsyncProducer(brokers, config)
 	if err != nil {
