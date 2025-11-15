@@ -1,17 +1,17 @@
 package com.chatwolf.api.controller;
 
-import com.chatwolf.api.dto.MessageDTO;
-import com.chatwolf.api.dto.SendMessageRequest;
-import com.chatwolf.api.service.MessageService;
 import java.util.List;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.chatwolf.api.dto.ConversationSummary;
+import com.chatwolf.api.service.MessageService;
+
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/chats/{chatId}/messages")
@@ -21,12 +21,8 @@ public class MessageController {
     private final MessageService messageService;
 
     @GetMapping
-    public ResponseEntity<List<MessageDTO>> getMessages(@PathVariable Long chatId) {
-        return ResponseEntity.ok(messageService.getMessages(chatId));
+    public ResponseEntity<List<ConversationSummary>> getMessages(@PathVariable String userId) {
+        return ResponseEntity.ok(messageService.getUserConversations(userId));
     }
-
-    @PostMapping
-    public ResponseEntity<MessageDTO> sendMessage(@PathVariable Long chatId, @RequestBody SendMessageRequest request) {
-        return ResponseEntity.ok(messageService.sendMessage(chatId, request));
-    }
+    
 }

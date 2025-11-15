@@ -1,64 +1,141 @@
 package com.chatwolf.api.service;
 
-import com.chatwolf.api.dto.MessageDTO;
-import com.chatwolf.api.dto.SendMessageRequest;
+import java.time.Instant;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.chatwolf.api.dto.ConversationSummary;
+import com.chatwolf.api.dto.MessagePageResponse;
+import com.chatwolf.api.dto.MessageResponse;
 import com.chatwolf.api.entity.Message;
 import com.chatwolf.api.repository.MessageRepository;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MessageService {
 
     private final MessageRepository messageRepository;
-    private final AuthService authService;
-    private final NotificationService notificationService;
+    private static final int PAGE_SIZE = 100;
 
-    public List<MessageDTO> getMessages(Long chatId) {
-        return messageRepository.findByChatIdOrderBySentAtAsc(chatId).stream()
-                .map(msg -> MessageDTO.builder()
-                        .id(msg.getId())
-                        .chatId(msg.getChatId().toString())
-                        .sender(authService.getUserById(msg.getSenderId()).getBody())
-                        .content(msg.getContent())
-                        .attachmentUrl(msg.getAttachmentUrl())
-                        .sentAt(msg.getSentAt())
+    /**
+     * Get conversation messages with infinite scroll
+     */
+    @Transactional(readOnly = true)
+    public MessagePageResponse getConversationMessages(
+            String conversationId, 
+            Long cursor) {
+        
+        List<Message> messages;
+        
+        if (cursor == null) {
+            // First page - get latest messages
+            messages = messageRepository.findFirstPageByConversation(
+                conversationId, 
+                PageRequest.of(0, PAGE_SIZE)
+            );
+        } else {
+            // Next page - use cursor
+            messages = messageRepository.findNextPageByConversation(
+                conversationId, 
+                cursor, 
+                PageRequest.of(0, PAGE_SIZE)
+            );
+        }
+        
+        // Determine next cursor and hasMore flag
+        Long nextCursor = null;
+        boolean hasMore = messages.size() == PAGE_SIZE;
+        
+        if (hasMore && !messages.isEmpty()) {
+            nextCursor = messages.get(messages.size() - 1).getSeqNo();
+        }
+        
+        // Convert to DTOs
+        List<MessageResponse> messageResponses = messages.stream()
+                .map(this::toMessageResponse)
+                .collect(Collectors.toList());
+        
+        return MessagePageResponse.builder()
+                .messages(messageResponses)
+                .nextCursor(nextCursor)
+                .hasMore(hasMore)
+                .totalCount(messageRepository.countMessagesByConversation(conversationId))
+                .build();
+    }
+    
+    /**
+     * Get user's conversation list
+     */
+    @Transactional(readOnly = true)
+    public List<ConversationSummary> getUserConversations(String userId) {
+        List<Object[]> results = messageRepository.findConversationListByUser(userId);
+        
+        return results.stream()
+                .map(row -> ConversationSummary.builder()
+                        .conversationId((String) row[0])
+                        .lastMessageTime((Instant) row[1])
+                        .lastMessagePreview((String) row[2])
                         .build())
                 .collect(Collectors.toList());
     }
-
-    public MessageDTO sendMessage(Long chatId, SendMessageRequest request) {
-        Message message = Message.builder()
-                .chatId(chatId)
-                .senderId(request.getSenderId())
-                .content(request.getContent())
-                .attachmentUrl(request.getAttachmentUrl())
-                .build();
-
-        messageRepository.save(message);
-
-        // Send async notification
-        notificationService.sendNotification(Map.of(
-                "type",
-                "MESSAGE",
-                "chatId",
-                chatId,
-                "senderId",
-                request.getSenderId(),
-                "content",
-                request.getContent()));
-
-        return MessageDTO.builder()
+    
+    /**
+     * Search messages in conversation
+     */
+    @Transactional(readOnly = true)
+    public List<MessageResponse> searchMessages(
+            String conversationId, 
+            String searchTerm) {
+        
+        List<Message> messages = messageRepository.searchMessagesInConversation(
+            conversationId, 
+            searchTerm, 
+            PageRequest.of(0, 50)
+        );
+        
+        return messages.stream()
+                .map(this::toMessageResponse)
+                .collect(Collectors.toList());
+    }
+    
+    /**
+     * Get messages by date range (for exports, analytics)
+     */
+    @Transactional(readOnly = true)
+    public List<MessageResponse> getMessagesByDateRange(
+            String conversationId,
+            Instant startDate,
+            Instant endDate) {
+        
+        List<Message> messages = messageRepository.findMessagesByDateRange(
+            conversationId, 
+            startDate, 
+            endDate
+        );
+        
+        return messages.stream()
+                .map(this::toMessageResponse)
+                .collect(Collectors.toList());
+    }
+    
+    private MessageResponse toMessageResponse(Message message) {
+        return MessageResponse.builder()
                 .id(message.getId())
-                .chatId(chatId.toString())
-                .sender(authService.getUserById(request.getSenderId()).getBody())
+                .conversationId(message.getConversationId())
+                .senderId(message.getSenderId())
+                .recipientId(message.getRecipientId())
                 .content(message.getContent())
                 .attachmentUrl(message.getAttachmentUrl())
-                .sentAt(message.getSentAt())
+                .seqNo(message.getSeqNo())
+                .createdAt(message.getCreatedAt())
                 .build();
     }
 }
