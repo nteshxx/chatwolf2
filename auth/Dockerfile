@@ -7,8 +7,6 @@ COPY build.gradle settings.gradle ./
 
 COPY gradle ./gradle
 
-RUN gradle --no-daemon dependencies
-
 COPY src ./src
 
 RUN gradle :spotlessApply

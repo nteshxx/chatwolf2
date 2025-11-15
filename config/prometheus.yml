@@ -30,7 +30,13 @@ scrape_configs:
         labels:
           application: 'socket'
 
-  # Scrape Alloy's own metrics
+  - job_name: 'consumer'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['consumer:7300']
+        labels:
+          application: 'consumer'
+
   - job_name: 'alloy'
     static_configs:
       - targets: ['alloy:12345']

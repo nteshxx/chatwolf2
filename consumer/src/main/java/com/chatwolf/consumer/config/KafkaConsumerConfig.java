@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -16,6 +17,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
+import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -122,5 +124,18 @@ public class KafkaConsumerConfig {
         mapper.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, true);
         mapper.findAndRegisterModules();
         return mapper;
+    }
+
+    @Bean
+    NewTopic chatMessagesTopic() {
+        return TopicBuilder.name("chat-messages").partitions(3).replicas(2).build();
+    }
+
+    @Bean
+    NewTopic chatMessagesDeadLetterTopic() {
+        return TopicBuilder.name("chat-messages-dead-letter")
+                .partitions(3)
+                .replicas(1)
+                .build();
     }
 }

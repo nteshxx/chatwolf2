@@ -20,7 +20,7 @@ services:
       interval: 10s
       timeout: 3s
       retries: 5
-      start_period: 60s
+      start_period: 20s
     logging:
       driver: "json-file"
       options:
@@ -58,7 +58,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 60s
+      start_period: 20s
     logging:
       driver: "json-file"
       options:
@@ -97,9 +97,9 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://auth:7100/actuator/health | grep -q 'UP' || exit 1"]
       interval: 15s
-      timeout: 3s
-      retries: 3
-      start_period: 60s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
     logging:
       driver: "json-file"
       options:
@@ -142,7 +142,46 @@ services:
       interval: 15s
       timeout: 3s
       retries: 5
-      start_period: 60s
+      start_period: 15s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+    networks:
+      - chatwolf-network
+  
+  # Consumer Service
+  consumer:
+    build: ./consumer/
+    image: consumer:1.0.0
+    container_name: consumer
+    ports:
+      - "7300:7300"
+    environment:
+      JAVA_OPTS: ${JAVA_OPTS}
+      SPRING_PROFILE: ${SPRING_PROFILE}
+      KAFKA_BROKERS: ${KAFKA_BROKERS}
+      KAFKA_TOPIC_CHAT_MESSAGES: ${KAFKA_TOPIC_CHAT_MESSAGES}
+      CHATWOLF_DB_HOST: ${CHATWOLF_DB_HOST}
+      CHATWOLF_DB_PORT: ${CHATWOLF_DB_PORT}
+      CHATWOLF_DB_NAME: ${CHATWOLF_DB_NAME}
+      CHATWOLF_DB_USER: ${CHATWOLF_DB_USER}
+      CHATWOLF_DB_PASSWORD: ${CHATWOLF_DB_PASSWORD}
+      ZIPKIN_ENDPOINT: ${ZIPKIN_ENDPOINT}
+      ZIPKIN_SAMPLING_RATE: ${ZIPKIN_SAMPLING_RATE}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://consumer:7300/actuator/health | grep -q 'UP' || exit 1"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+      start_period: 20s
     logging:
       driver: "json-file"
       options:
@@ -345,7 +384,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 60s
+      start_period: 20s
     restart: unless-stopped
     networks:
       - chatwolf-network
@@ -434,7 +473,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 10
-      start_period: 60s
+      start_period: 20s
     restart: unless-stopped
     networks:
       - chatwolf-network
