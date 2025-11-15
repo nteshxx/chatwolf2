@@ -1,22 +1,25 @@
 package com.chatwolf.consumer.listener;
 
 import com.chatwolf.consumer.dto.ChatMessageEvent;
-import com.chatwolf.consumer.entity.MessageEntity;
+import com.chatwolf.consumer.entity.Message;
 import com.chatwolf.consumer.exception.NonRecoverableException;
 import com.chatwolf.consumer.exception.RecoverableException;
-import com.chatwolf.consumer.service.PersistenceService;
+import com.chatwolf.consumer.service.MessageService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
+import jakarta.annotation.PostConstruct;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springframework.dao.DataAccessException;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;
@@ -25,14 +28,13 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 @Validated
 public class KafkaMessageListener {
 
-    private static final Logger log = LoggerFactory.getLogger(KafkaMessageListener.class);
-
-    private final PersistenceService persistenceService;
+    private final MessageService messageService;
     private final ObjectMapper objectMapper;
     private final MeterRegistry meterRegistry;
 
@@ -40,9 +42,10 @@ public class KafkaMessageListener {
     private Counter messagesProcessed;
     private Counter messagesFailed;
     private Counter duplicateMessages;
-    private Timer processingTimer;
+    private Timer messageProcessingTimer;
+    private Timer messageBatchProcessingTimer;
 
-    @jakarta.annotation.PostConstruct
+    @PostConstruct
     public void initMetrics() {
         messagesProcessed = Counter.builder("kafka.messages.processed")
                 .description("Total messages successfully processed")
@@ -59,8 +62,13 @@ public class KafkaMessageListener {
                 .tag("topic", "chat-messages")
                 .register(meterRegistry);
 
-        processingTimer = Timer.builder("kafka.message.processing.time")
+        messageProcessingTimer = Timer.builder("kafka.message.processing.time")
                 .description("Message processing time")
+                .tag("topic", "chat-messages")
+                .register(meterRegistry);
+
+        messageBatchProcessingTimer = Timer.builder("kafka.message.batch.processing.time")
+                .description("Message batch processing time")
                 .tag("topic", "chat-messages")
                 .register(meterRegistry);
     }
@@ -88,19 +96,15 @@ public class KafkaMessageListener {
         try {
             log.info("Processing message - key={}, partition={}, offset={}", key, partition, offset);
 
-            // Deserialize with error handling
             ChatMessageEvent event = deserializeMessage(payload);
 
-            // Validate event
             validateEvent(event);
 
-            // Add event ID to MDC
             MDC.put("eventId", event.getEventId());
 
-            // Process message
-            boolean isNewMessage = processMessage(event);
+            Message message = processMessage(event);
 
-            if (!isNewMessage) {
+            if (message.isDuplicate()) {
                 duplicateMessages.increment();
                 log.warn("Duplicate message detected - eventId={}", event.getEventId());
             }
@@ -111,7 +115,7 @@ public class KafkaMessageListener {
             }
 
             messagesProcessed.increment();
-            recordProcessingTime(startTime);
+            recordMessageProcessingTime(startTime);
 
             log.info(
                     "Successfully processed message - eventId={}, duration={}ms",
@@ -138,6 +142,95 @@ public class KafkaMessageListener {
         } catch (Exception e) {
             // Unknown error - treat as recoverable with limited retries
             messagesFailed.increment();
+            log.error("Unexpected error processing message", e);
+            throw new RecoverableException("Unexpected error", e);
+
+        } finally {
+            MDC.clear();
+        }
+    }
+
+    @KafkaListener(
+            topics = "${kafka.topic.chat-messages:chat-messages}",
+            groupId = "${spring.kafka.consumer.group-id}",
+            containerFactory = "kafkaListenerContainerFactory",
+            concurrency = "${kafka.consumer.concurrency:3}")
+    public void listenBatch(
+            @Payload List<String> payloads,
+            @Header(KafkaHeaders.RECEIVED_KEY) String key,
+            @Header(KafkaHeaders.RECEIVED_PARTITION) int partition,
+            @Header(KafkaHeaders.OFFSET) long offset,
+            @Header(KafkaHeaders.RECEIVED_TIMESTAMP) long timestamp,
+            List<Acknowledgment> acknowledgments) {
+        String correlationId = UUID.randomUUID().toString();
+        Instant startTime = Instant.now();
+
+        // Add correlation ID to MDC for logging
+        MDC.put("correlationId", correlationId);
+        MDC.put("partition", String.valueOf(partition));
+        MDC.put("offset", String.valueOf(offset));
+
+        try {
+            log.info(
+                    "Processing {} messages - key={}, partition={}, offset={}",
+                    payloads.size(),
+                    key,
+                    partition,
+                    offset);
+
+            List<ChatMessageEvent> eventList = new ArrayList<>();
+            for (String payload : payloads) {
+
+                ChatMessageEvent event = deserializeMessage(payload);
+
+                validateEvent(event);
+
+                eventList.add(event);
+            }
+
+            // process message batch
+            List<Message> messageList = processMessageBatch(eventList);
+
+            messageList.forEach(message -> {
+                if (message.isDuplicate()) {
+                    duplicateMessages.increment();
+                    log.warn("Duplicate message detected - eventId={}", message.getEventId());
+                }
+            });
+
+            // Manual acknowledgment after successful processing
+            if (acknowledgments != null) {
+                acknowledgments.forEach(Acknowledgment::acknowledge);
+            }
+
+            messagesProcessed.increment(messageList.size());
+            recordMessageBatchProcessingTime(startTime);
+
+            log.info(
+                    "Successfully processed {} messages - duration={}ms",
+                    messageList.size(),
+                    Duration.between(startTime, Instant.now()).toMillis());
+
+        } catch (NonRecoverableException e) {
+            // Don't retry - send to DLQ
+            messagesFailed.increment(payloads.size());
+            log.error("Non-recoverable error processing messages - will send to DLQ", e);
+
+            if (acknowledgments != null) {
+                acknowledgments.forEach(Acknowledgment::acknowledge); // Acknowledge to prevent retry
+            }
+            // Exception will be handled by error handler and sent to DLQ
+            throw e;
+
+        } catch (RecoverableException e) {
+            // Retry - don't acknowledge
+            messagesFailed.increment(payloads.size());
+            log.warn("Recoverable error processing message - will retry", e);
+            throw e; // Will trigger retry based on configuration
+
+        } catch (Exception e) {
+            // Unknown error - treat as recoverable with limited retries
+            messagesFailed.increment(payloads.size());
             log.error("Unexpected error processing message", e);
             throw new RecoverableException("Unexpected error", e);
 
@@ -175,14 +268,14 @@ public class KafkaMessageListener {
         }
 
         // Add more validation as needed
-        if (event.getSenderId() == null || event.getReceiverId() == null) {
+        if (event.getTo() == null || event.getTo() == null) {
             throw new NonRecoverableException("Sender and receiver IDs are required");
         }
     }
 
-    private boolean processMessage(ChatMessageEvent event) {
+    private Message processMessage(ChatMessageEvent event) {
         try {
-            MessageEntity saved = persistenceService.persistMessage(event);
+            Message saved = messageService.saveMessage(event);
 
             log.debug(
                     "Persisted message - id={}, seqNo={}, isDuplicate={}",
@@ -190,9 +283,9 @@ public class KafkaMessageListener {
                     saved.getSeqNo(),
                     saved.isDuplicate());
 
-            return !saved.isDuplicate();
+            return saved;
 
-        } catch (org.springframework.dao.DataAccessException e) {
+        } catch (DataAccessException e) {
             // Database errors are usually recoverable
             throw new RecoverableException("Database error while persisting message", e);
         } catch (Exception e) {
@@ -202,8 +295,29 @@ public class KafkaMessageListener {
         }
     }
 
-    private void recordProcessingTime(Instant startTime) {
+    private List<Message> processMessageBatch(List<ChatMessageEvent> eventList) {
+        try {
+            List<Message> savedList = messageService.saveMessageBatch(eventList);
+            log.debug("Persisted {} messages", savedList.size());
+            return savedList;
+
+        } catch (DataAccessException e) {
+            // Database errors are usually recoverable
+            throw new RecoverableException("Database error while persisting message", e);
+        } catch (Exception e) {
+            // Other persistence errors
+            log.error("Error persisting message", e);
+            throw new RecoverableException("Failed to persist message", e);
+        }
+    }
+
+    private void recordMessageProcessingTime(Instant startTime) {
         Duration duration = Duration.between(startTime, Instant.now());
-        processingTimer.record(duration);
+        messageProcessingTimer.record(duration);
+    }
+
+    private void recordMessageBatchProcessingTime(Instant startTime) {
+        Duration duration = Duration.between(startTime, Instant.now());
+        messageBatchProcessingTimer.record(duration);
     }
 }

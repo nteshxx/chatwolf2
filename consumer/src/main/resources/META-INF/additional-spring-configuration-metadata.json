@@ -1,0 +1,27 @@
+{"properties": [
+  {
+    "name": "kafka.consumer.session-timeout-ms",
+    "type": "java.lang.String",
+    "description": "A description for 'kafka.consumer.session-timeout-ms'"
+  },
+  {
+    "name": "kafka.consumer.max-poll-interval-ms",
+    "type": "java.lang.String",
+    "description": "A description for 'kafka.consumer.max-poll-interval-ms'"
+  },
+  {
+    "name": "kafka.consumer.enable-auto-commit",
+    "type": "java.lang.String",
+    "description": "A description for 'kafka.consumer.enable-auto-commit'"
+  },
+  {
+    "name": "kafka.topic.chat-messages",
+    "type": "java.lang.String",
+    "description": "A description for 'kafka.topic.chat-messages'"
+  },
+  {
+    "name": "kafka.consumer.concurrency",
+    "type": "java.lang.String",
+    "description": "A description for 'kafka.consumer.concurrency'"
+  }
+]}

@@ -4,10 +4,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.Instant;
 import lombok.*;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+@Getter
+@Setter
 public class ChatMessageEvent {
+
     @JsonProperty("eventId")
     private String eventId;
 
@@ -15,10 +15,10 @@ public class ChatMessageEvent {
     private String clientMsgId;
 
     @JsonProperty("from")
-    private String senderId;
+    private String from;
 
     @JsonProperty("to")
-    private String receiverId;
+    private String to;
 
     @JsonProperty("conversationId")
     private String conversationId;
