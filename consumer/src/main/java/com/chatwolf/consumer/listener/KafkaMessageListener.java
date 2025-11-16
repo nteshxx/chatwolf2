@@ -150,17 +150,20 @@ public class KafkaMessageListener {
     }
 
     private void validateEvent(ChatMessageEvent event) {
-        if (event.getEventId() == null || event.getEventId().trim().isEmpty()) {
+        if (event.getEventId().isBlank()) {
             throw new NonRecoverableException("Event ID is required");
         }
 
-        if (event.getContent() == null) {
+        if (event.getContent().isBlank()) {
             throw new NonRecoverableException("Message content is required");
         }
 
-        // Add more validation as needed
-        if (event.getTo() == null || event.getTo() == null) {
+        if (event.getFrom().isBlank() || event.getTo().isBlank()) {
             throw new NonRecoverableException("Sender and receiver IDs are required");
+        }
+
+        if (event.getConversationId().isBlank()) {
+            throw new NonRecoverableException("Conversation ID is required");
         }
     }
 
