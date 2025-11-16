@@ -23,12 +23,12 @@ public class SecurityConfig {
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
-                                "/auth/register",
-                                "/auth/login",
-                                "/auth/refresh",
-                                "/auth/token",
-                                "/auth/validate",
-                                "/auth/.well-known/jwks.json",
+                                "/api/auth/register",
+                                "/api/auth/login",
+                                "/api/auth/refresh",
+                                "/api/auth/token",
+                                "/api/auth/validate",
+                                "/api/auth/.well-known/jwks.json",
                                 "/actuator/**")
                         .permitAll()
                         .anyRequest()
