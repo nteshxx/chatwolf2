@@ -16,7 +16,7 @@ import lombok.Setter;
 
 @Entity
 @Table(
-        name = "messages",
+        name = "t_message",
         uniqueConstraints =
                 @UniqueConstraint(
                         name = "uk_event_id",
@@ -26,7 +26,6 @@ import lombok.Setter;
             @Index(name = "idx_sender_conversation", columnList = "sender_id, conversation_id, created_at DESC"),
             @Index(name = "idx_recipient_conversation", columnList = "recipient_id, conversation_id, created_at DESC"),
             @Index(name = "idx_client_msg_id", columnList = "client_msg_id"),
-            @Index(name = "idx_event_id", columnList = "event_id"),
             @Index(name = "idx_recipient_unread", columnList = "recipient_id, conversation_id, read_at")
         })
 @Getter

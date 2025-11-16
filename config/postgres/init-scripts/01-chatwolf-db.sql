@@ -18,8 +18,8 @@ GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA chatwolf TO chatwolf_user;
 GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA chatwolf TO chatwolf_user;
 GRANT ALL PRIVILEGES ON SCHEMA chatwolf TO chatwolf_user;
 
--- Create sequence management function
-CREATE TABLE IF NOT EXISTS conversation_sequences (
+-- Create t_conversation_sequence table for managing sequences in t_message
+CREATE TABLE IF NOT EXISTS chatwolf.t_conversation_sequences (
     conversation_id VARCHAR(100) PRIMARY KEY,
     current_seq BIGINT NOT NULL DEFAULT 0,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -27,10 +27,10 @@ CREATE TABLE IF NOT EXISTS conversation_sequences (
 
 -- Create index for faster lookups
 CREATE INDEX IF NOT EXISTS idx_conversation_sequences_updated 
-ON conversation_sequences(updated_at);
+ON chatwolf.t_conversation_sequences(updated_at);
 
 -- Function to atomically get next sequence number
-CREATE OR REPLACE FUNCTION get_next_conversation_seq(p_conversation_id VARCHAR)
+CREATE OR REPLACE FUNCTION chatwolf.get_next_conversation_seq(p_conversation_id VARCHAR)
 RETURNS BIGINT
 LANGUAGE plpgsql
 AS $$
@@ -38,12 +38,12 @@ DECLARE
     v_next_seq BIGINT;
 BEGIN
     -- Insert new row if doesn't exist (ON CONFLICT DO NOTHING prevents race condition)
-    INSERT INTO conversation_sequences (conversation_id, current_seq)
-    VALUES (p_conversation_id, 1)
+    INSERT INTO chatwolf.t_conversation_sequences (conversation_id, current_seq)
+    VALUES (p_conversation_id, 0)
     ON CONFLICT (conversation_id) DO NOTHING;
     
     -- Atomically increment and return new value
-    UPDATE conversation_sequences
+    UPDATE chatwolf.t_conversation_sequences
     SET current_seq = current_seq + 1,
         updated_at = CURRENT_TIMESTAMP
     WHERE conversation_id = p_conversation_id
@@ -53,8 +53,11 @@ BEGIN
 END;
 $$;
 
--- Grant execute permission
-GRANT EXECUTE ON FUNCTION get_next_conversation_seq(VARCHAR) TO chatwolf_user;
+-- Grant execute permission on the function
+GRANT EXECUTE ON FUNCTION chatwolf.get_next_conversation_seq(VARCHAR) TO chatwolf_user;
+
+-- Set search_path for chatwolf_user to include chatwolf schema by default
+ALTER ROLE chatwolf_user SET search_path TO chatwolf, public;
 
 DO $$
 BEGIN

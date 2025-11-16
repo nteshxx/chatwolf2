@@ -24,6 +24,6 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
      * Get next sequence number using PostgreSQL function
      * This is atomic and handles concurrency automatically
      */
-    @Query("SELECT get_next_conversation_seq(:conversationId)")
+    @Query("SELECT chatwolf.get_next_conversation_seq(:conversationId)")
     Long getNextSeqNo(@Param("conversationId") String conversationId);
 }
