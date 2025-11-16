@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono;
 
 @Slf4j
 @RestController
-@RequestMapping("/fallback")
+@RequestMapping("/api/fallback")
 public class FallbackController {
 
     @RequestMapping(
@@ -30,5 +30,14 @@ public class FallbackController {
         log.warn("Socket service fallback triggered");
         return Mono.just(
                 ResponseBuilder.build(HttpStatus.SERVICE_UNAVAILABLE, "socket service temporarily unavailable", null));
+    }
+
+    @RequestMapping(
+            value = "/presence",
+            method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PATCH})
+    public Mono<ResponseEntity<Object>> presenceFallback() {
+        log.warn("Presence service fallback triggered");
+        return Mono.just(ResponseBuilder.build(
+                HttpStatus.SERVICE_UNAVAILABLE, "presence service temporarily unavailable", null));
     }
 }

@@ -21,7 +21,7 @@ public class SecurityConfig {
                 .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
                 .authorizeExchange(auth -> auth.pathMatchers(
                                 "/public/**",
-                                "/api/v1/auth/**",
+                                "/api/auth/**",
                                 "/actuator/health",
                                 "/actuator/health/**",
                                 "/actuator/prometheus",
