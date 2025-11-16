@@ -47,7 +47,7 @@ func main() {
 	})
 
 	// Initialize metrics
-	appMetrics := metrics.New()
+	appMetrics := metrics.NewMetrics()
 
 	// Initialize tracer
 	tracerCfg := tracing.Config{
@@ -87,21 +87,30 @@ func main() {
 	}
 	defer redisHub.Close(ctx)
 
+	// Initialize presence publisher (uses Redis hub internally)
+	presencePublisher := redis.NewPresencePublisher(redisHub.GetClient(), log)
+
+	// Verify Redis connection for presence
+	if err := presencePublisher.Ping(ctx); err != nil {
+		log.Fatal(ctx, "failed to connect to Redis for presence", err)
+	}
+	log.Info(ctx, "presence publisher initialized", nil)
+
 	// Initialize WebSocket server
-	wsServer := websocket.NewServer(authService, nil, redisHub, log, appMetrics, tracer)
+	wsServer := websocket.NewServer(authService, nil, presencePublisher, log, appMetrics)
 
 	// Initialize message service
 	messageService := service.NewMessageService(kafkaProducer, redisHub, wsServer, log, appMetrics, tracer)
 
 	// Set message handler on WebSocket server (circular dependency resolved)
-	wsServer = websocket.NewServer(authService, messageService, redisHub, log, appMetrics, tracer)
+	wsServer = websocket.NewServer(authService, messageService, presencePublisher, log, appMetrics)
 
 	// Set Redis handlers
 	redisHub.SetHandlers(
 		func(ctx context.Context, event domain.MessageEvent) {
 			wsServer.DeliverToUser(ctx, event.To, event)
 		},
-		nil, // presence handler can be added if needed
+		nil, // presence handler not needed (using direct publisher)
 	)
 
 	// Start Redis subscriber
@@ -128,16 +137,33 @@ func main() {
 	router.Use(middleware.Logging(log, loggingCfg))
 
 	// WebSocket endpoint
-	router.HandleFunc("/socket/connect", wsServer.HandleConnection)
+	router.HandleFunc("/api/socket/connect", wsServer.HandleConnection)
+
+	// Stats endpoint
+	router.HandleFunc("/api/socket/stats", func(w http.ResponseWriter, r *http.Request) {
+		stats := wsServer.GetStats()
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintf(w, `{"status":"ok","total_users":%d,"total_connections":%d}`,
+			stats["total_users"], stats["total_connections"])
+	}).Methods("GET")
 
 	// Metrics endpoint
 	router.Handle("/prometheus/metrics", promhttp.Handler()).Methods("GET")
 
 	// Health check endpoint
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		// Check Redis connection
+		if err := presencePublisher.Ping(r.Context()); err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusServiceUnavailable)
+			w.Write([]byte(`{"status":"DOWN","redis":"disconnected"}`))
+			return
+		}
+
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"UP"}`))
+		w.Write([]byte(`{"status":"UP","redis":"connected"}`))
 	}).Methods("GET")
 
 	// Create HTTP server

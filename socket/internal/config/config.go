@@ -45,13 +45,14 @@ func getEnvAsFloat(key string, defaultVal float64) float64 {
 }
 
 type Config struct {
-	Server  ServerConfig
-	Auth    AuthConfig
-	Kafka   KafkaConfig
-	Redis   RedisConfig
-	Zipkin  ZipkinConfig
-	Eureka  EurekaConfig
-	Logging LoggingConfig
+	Server   ServerConfig
+	Auth     AuthConfig
+	Kafka    KafkaConfig
+	Redis    RedisConfig
+	Zipkin   ZipkinConfig
+	Eureka   EurekaConfig
+	Logging  LoggingConfig
+	Presence PresenceConfig
 }
 
 type ServerConfig struct {
@@ -95,6 +96,11 @@ type LoggingConfig struct {
 	ExcludeMetricsEndpoint bool
 }
 
+type PresenceConfig struct {
+	HeartbeatInterval string
+	Channel           string
+}
+
 func Load() (*Config, error) {
 	cfg := &Config{
 		Server: ServerConfig{
@@ -106,7 +112,7 @@ func Load() (*Config, error) {
 			IdleTimeout:  60 * time.Second,
 		},
 		Auth: AuthConfig{
-			JWKSURL: getEnv("JWKS_URL", "http://localhost:7100/auth/.well-known/jwks.json"),
+			JWKSURL: getEnv("JWKS_URL", "http://localhost:7100/api/auth/.well-known/jwks.json"),
 		},
 		Kafka: KafkaConfig{
 			Brokers: strings.Split(getEnv("KAFKA_BROKERS", "localhost:9092"), ","),
@@ -130,6 +136,10 @@ func Load() (*Config, error) {
 			Level:                  getEnv("LOG_LEVEL", "info"),
 			ExcludeHealthEndpoint:  true,
 			ExcludeMetricsEndpoint: true,
+		},
+		Presence: PresenceConfig{
+			HeartbeatInterval: "30s",
+			Channel:           "presence:channel",
 		},
 	}
 

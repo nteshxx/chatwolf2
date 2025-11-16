@@ -53,7 +53,7 @@ func NewMessageService(
 func (s *MessageService) HandleMessage(ctx context.Context, from string, msg domain.Message) (domain.MessageEvent, error) {
 	start := time.Now()
 	defer func() {
-		s.metrics.MessageProcessingTime.Observe(time.Since(start).Seconds())
+		s.metrics.MessageProcessingDuration.Observe(time.Since(start).Seconds())
 	}()
 
 	s.metrics.MessagesReceived.Inc()
