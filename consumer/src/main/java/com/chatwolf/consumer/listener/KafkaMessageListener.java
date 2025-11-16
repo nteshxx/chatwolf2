@@ -13,12 +13,8 @@ import io.micrometer.core.instrument.Timer;
 import jakarta.annotation.PostConstruct;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.MDC;
 import org.springframework.dao.DataAccessException;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
@@ -43,7 +39,6 @@ public class KafkaMessageListener {
     private Counter messagesFailed;
     private Counter duplicateMessages;
     private Timer messageProcessingTimer;
-    private Timer messageBatchProcessingTimer;
 
     @PostConstruct
     public void initMetrics() {
@@ -66,11 +61,6 @@ public class KafkaMessageListener {
                 .description("Message processing time")
                 .tag("topic", "chat-messages")
                 .register(meterRegistry);
-
-        messageBatchProcessingTimer = Timer.builder("kafka.message.batch.processing.time")
-                .description("Message batch processing time")
-                .tag("topic", "chat-messages")
-                .register(meterRegistry);
     }
 
     @KafkaListener(
@@ -85,13 +75,8 @@ public class KafkaMessageListener {
             @Header(KafkaHeaders.OFFSET) long offset,
             @Header(KafkaHeaders.RECEIVED_TIMESTAMP) long timestamp,
             Acknowledgment acknowledgment) {
-        String correlationId = UUID.randomUUID().toString();
-        Instant startTime = Instant.now();
 
-        // Add correlation ID to MDC for logging
-        MDC.put("correlationId", correlationId);
-        MDC.put("partition", String.valueOf(partition));
-        MDC.put("offset", String.valueOf(offset));
+        Instant startTime = Instant.now();
 
         try {
             log.info("Processing message - key={}, partition={}, offset={}", key, partition, offset);
@@ -99,8 +84,6 @@ public class KafkaMessageListener {
             ChatMessageEvent event = deserializeMessage(payload);
 
             validateEvent(event);
-
-            MDC.put("eventId", event.getEventId());
 
             Message message = processMessage(event);
 
@@ -144,98 +127,6 @@ public class KafkaMessageListener {
             messagesFailed.increment();
             log.error("Unexpected error processing message", e);
             throw new RecoverableException("Unexpected error", e);
-
-        } finally {
-            MDC.clear();
-        }
-    }
-
-    @KafkaListener(
-            topics = "${kafka.topic.chat-messages:chat-messages}",
-            groupId = "${spring.kafka.consumer.group-id}",
-            containerFactory = "kafkaListenerContainerFactory",
-            concurrency = "${kafka.consumer.concurrency:3}")
-    public void listenBatch(
-            @Payload List<String> payloads,
-            @Header(KafkaHeaders.RECEIVED_KEY) String key,
-            @Header(KafkaHeaders.RECEIVED_PARTITION) int partition,
-            @Header(KafkaHeaders.OFFSET) long offset,
-            @Header(KafkaHeaders.RECEIVED_TIMESTAMP) long timestamp,
-            List<Acknowledgment> acknowledgments) {
-        String correlationId = UUID.randomUUID().toString();
-        Instant startTime = Instant.now();
-
-        // Add correlation ID to MDC for logging
-        MDC.put("correlationId", correlationId);
-        MDC.put("partition", String.valueOf(partition));
-        MDC.put("offset", String.valueOf(offset));
-
-        try {
-            log.info(
-                    "Processing {} messages - key={}, partition={}, offset={}",
-                    payloads.size(),
-                    key,
-                    partition,
-                    offset);
-
-            List<ChatMessageEvent> eventList = new ArrayList<>();
-            for (String payload : payloads) {
-
-                ChatMessageEvent event = deserializeMessage(payload);
-
-                validateEvent(event);
-
-                eventList.add(event);
-            }
-
-            // process message batch
-            List<Message> messageList = processMessageBatch(eventList);
-
-            messageList.forEach(message -> {
-                if (message.isDuplicate()) {
-                    duplicateMessages.increment();
-                    log.warn("Duplicate message detected - eventId={}", message.getEventId());
-                }
-            });
-
-            // Manual acknowledgment after successful processing
-            if (acknowledgments != null) {
-                acknowledgments.forEach(Acknowledgment::acknowledge);
-            }
-
-            messagesProcessed.increment(messageList.size());
-            recordMessageBatchProcessingTime(startTime);
-
-            log.info(
-                    "Successfully processed {} messages - duration={}ms",
-                    messageList.size(),
-                    Duration.between(startTime, Instant.now()).toMillis());
-
-        } catch (NonRecoverableException e) {
-            // Don't retry - send to DLQ
-            messagesFailed.increment(payloads.size());
-            log.error("Non-recoverable error processing messages - will send to DLQ", e);
-
-            if (acknowledgments != null) {
-                acknowledgments.forEach(Acknowledgment::acknowledge); // Acknowledge to prevent retry
-            }
-            // Exception will be handled by error handler and sent to DLQ
-            throw e;
-
-        } catch (RecoverableException e) {
-            // Retry - don't acknowledge
-            messagesFailed.increment(payloads.size());
-            log.warn("Recoverable error processing message - will retry", e);
-            throw e; // Will trigger retry based on configuration
-
-        } catch (Exception e) {
-            // Unknown error - treat as recoverable with limited retries
-            messagesFailed.increment(payloads.size());
-            log.error("Unexpected error processing message", e);
-            throw new RecoverableException("Unexpected error", e);
-
-        } finally {
-            MDC.clear();
         }
     }
 
@@ -295,29 +186,8 @@ public class KafkaMessageListener {
         }
     }
 
-    private List<Message> processMessageBatch(List<ChatMessageEvent> eventList) {
-        try {
-            List<Message> savedList = messageService.saveMessageBatch(eventList);
-            log.debug("Persisted {} messages", savedList.size());
-            return savedList;
-
-        } catch (DataAccessException e) {
-            // Database errors are usually recoverable
-            throw new RecoverableException("Database error while persisting message", e);
-        } catch (Exception e) {
-            // Other persistence errors
-            log.error("Error persisting message", e);
-            throw new RecoverableException("Failed to persist message", e);
-        }
-    }
-
     private void recordMessageProcessingTime(Instant startTime) {
         Duration duration = Duration.between(startTime, Instant.now());
         messageProcessingTimer.record(duration);
-    }
-
-    private void recordMessageBatchProcessingTime(Instant startTime) {
-        Duration duration = Duration.between(startTime, Instant.now());
-        messageBatchProcessingTimer.record(duration);
     }
 }

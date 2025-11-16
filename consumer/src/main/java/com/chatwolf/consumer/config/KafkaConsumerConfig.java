@@ -76,7 +76,6 @@ public class KafkaConsumerConfig {
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
         factory.getContainerProperties().setShutdownTimeout(30000L);
         factory.setCommonErrorHandler(errorHandler(kafkaTemplate));
-        factory.setBatchListener(true);
         return factory;
     }
 
