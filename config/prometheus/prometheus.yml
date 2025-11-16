@@ -1,13 +1,25 @@
 global:
   scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'chatwolf'
+    environment: 'production'
 
 scrape_configs:
+  - job_name: 'alloy'
+    static_configs:
+      - targets: ['alloy:12345']
+        labels:
+          application: 'alloy'
+          service: 'alloy'
+  
   - job_name: 'eureka'
     metrics_path: '/actuator/prometheus'
     static_configs:
       - targets: ['eureka:8761']
         labels:
           application: 'eureka'
+          service: 'eureka'
 
   - job_name: 'gateway'
     metrics_path: '/actuator/prometheus'
@@ -15,6 +27,7 @@ scrape_configs:
       - targets: ['gateway:7000']
         labels:
           application: 'gateway'
+          service: 'gateway'
 
   - job_name: 'auth'
     metrics_path: '/actuator/prometheus'
@@ -22,6 +35,7 @@ scrape_configs:
       - targets: ['auth:7100']
         labels:
           application: 'auth'
+          service: 'auth'
 
   - job_name: 'socket'
     metrics_path: '/prometheus/metrics'
@@ -29,6 +43,7 @@ scrape_configs:
       - targets: ['socket:7200']
         labels:
           application: 'socket'
+          service: 'socket'
 
   - job_name: 'consumer'
     metrics_path: '/actuator/prometheus'
@@ -36,7 +51,12 @@ scrape_configs:
       - targets: ['consumer:7300']
         labels:
           application: 'consumer'
-
-  - job_name: 'alloy'
+          service: 'consumer'
+    
+  - job_name: 'presence'
+    metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['alloy:12345']
+      - targets: ['presence:7400']
+        labels:
+          application: 'presence'
+          service: 'presence'

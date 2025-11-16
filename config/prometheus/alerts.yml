@@ -1,0 +1,27 @@
+groups:
+  - name: presence_alerts
+    interval: 30s
+    rules:
+      - alert: PresenceServiceDown
+        expr: up{job="presence-service"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Presence service is down"
+          
+      - alert: HighRedisErrorRate
+        expr: rate(presence_redis_errors_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High Redis error rate detected"
+          
+      - alert: NoOnlineUsers
+        expr: presence_users_online == 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "No users online for 10 minutes"

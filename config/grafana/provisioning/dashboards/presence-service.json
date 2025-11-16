@@ -1,0 +1,460 @@
+{
+  "dashboard": {
+    "title": "ChatWolf Presence Service",
+    "tags": ["presence", "realtime", "chatwolf"],
+    "timezone": "browser",
+    "refresh": "5s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Online Users Count (Live)",
+        "type": "stat",
+        "gridPos": {
+          "x": 0,
+          "y": 0,
+          "w": 8,
+          "h": 8
+        },
+        "targets": [
+          {
+            "expr": "presence_users_online",
+            "refId": "A",
+            "legendFormat": "Online Users"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "value": 0,
+                  "color": "red"
+                },
+                {
+                  "value": 1,
+                  "color": "yellow"
+                },
+                {
+                  "value": 100,
+                  "color": "green"
+                },
+                {
+                  "value": 1000,
+                  "color": "blue"
+                }
+              ]
+            }
+          }
+        },
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value",
+          "orientation": "auto",
+          "textMode": "value_and_name",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Online Users Trend",
+        "type": "graph",
+        "gridPos": {
+          "x": 8,
+          "y": 0,
+          "w": 16,
+          "h": 8
+        },
+        "targets": [
+          {
+            "expr": "presence_users_online",
+            "refId": "A",
+            "legendFormat": "Online Users"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "short",
+            "label": "Users",
+            "min": 0
+          },
+          {
+            "format": "short",
+            "show": false
+          }
+        ],
+        "lines": true,
+        "fill": 2,
+        "linewidth": 2,
+        "points": false,
+        "pointradius": 2,
+        "bars": false,
+        "stack": false,
+        "tooltip": {
+          "shared": true,
+          "sort": 0,
+          "value_type": "individual"
+        },
+        "legend": {
+          "show": true,
+          "values": true,
+          "min": true,
+          "max": true,
+          "current": true,
+          "avg": true
+        }
+      },
+      {
+        "id": 3,
+        "title": "Presence Events Processed",
+        "type": "graph",
+        "gridPos": {
+          "x": 0,
+          "y": 8,
+          "w": 12,
+          "h": 8
+        },
+        "targets": [
+          {
+            "expr": "rate(presence_events_processed_total[5m])",
+            "refId": "A",
+            "legendFormat": "Events/sec"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "ops",
+            "label": "Events per second"
+          }
+        ],
+        "lines": true,
+        "fill": 1,
+        "linewidth": 2
+      },
+      {
+        "id": 4,
+        "title": "Events by Status",
+        "type": "graph",
+        "gridPos": {
+          "x": 12,
+          "y": 8,
+          "w": 12,
+          "h": 8
+        },
+        "targets": [
+          {
+            "expr": "rate(presence_events_by_status_total{status=\"online\"}[5m])",
+            "refId": "A",
+            "legendFormat": "Online"
+          },
+          {
+            "expr": "rate(presence_events_by_status_total{status=\"offline\"}[5m])",
+            "refId": "B",
+            "legendFormat": "Offline"
+          },
+          {
+            "expr": "rate(presence_events_by_status_total{status=\"away\"}[5m])",
+            "refId": "C",
+            "legendFormat": "Away"
+          },
+          {
+            "expr": "rate(presence_events_by_status_total{status=\"heartbeat\"}[5m])",
+            "refId": "D",
+            "legendFormat": "Heartbeat"
+          }
+        ],
+        "stack": true,
+        "fill": 5,
+        "linewidth": 1
+      },
+      {
+        "id": 5,
+        "title": "Event Processing Issues",
+        "type": "graph",
+        "gridPos": {
+          "x": 0,
+          "y": 16,
+          "w": 12,
+          "h": 7
+        },
+        "targets": [
+          {
+            "expr": "rate(presence_events_ignored_duplicate_total[5m])",
+            "refId": "A",
+            "legendFormat": "Duplicate Events"
+          },
+          {
+            "expr": "rate(presence_events_ignored_stale_total[5m])",
+            "refId": "B",
+            "legendFormat": "Stale Events"
+          },
+          {
+            "expr": "rate(presence_redis_errors_total[5m])",
+            "refId": "C",
+            "legendFormat": "Redis Errors"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "ops",
+            "label": "Events/sec"
+          }
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {
+                "params": [10],
+                "type": "gt"
+              },
+              "operator": {
+                "type": "and"
+              },
+              "query": {
+                "params": ["C", "5m", "now"]
+              },
+              "reducer": {
+                "params": [],
+                "type": "avg"
+              },
+              "type": "query"
+            }
+          ],
+          "frequency": "60s",
+          "handler": 1,
+          "name": "High Redis Error Rate",
+          "message": "Redis errors exceeding threshold"
+        }
+      },
+      {
+        "id": 6,
+        "title": "Service Health",
+        "type": "stat",
+        "gridPos": {
+          "x": 12,
+          "y": 16,
+          "w": 6,
+          "h": 7
+        },
+        "targets": [
+          {
+            "expr": "up{job=\"presence-service\"}",
+            "refId": "A",
+            "legendFormat": "Service Up"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {
+                "type": "value",
+                "options": {
+                  "0": {
+                    "text": "DOWN",
+                    "color": "red"
+                  },
+                  "1": {
+                    "text": "UP",
+                    "color": "green"
+                  }
+                }
+              }
+            ],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "value": 0,
+                  "color": "red"
+                },
+                {
+                  "value": 1,
+                  "color": "green"
+                }
+              ]
+            }
+          }
+        },
+        "options": {
+          "colorMode": "background",
+          "graphMode": "none",
+          "textMode": "value"
+        }
+      },
+      {
+        "id": 7,
+        "title": "Active SSE Connections",
+        "type": "stat",
+        "gridPos": {
+          "x": 18,
+          "y": 16,
+          "w": 6,
+          "h": 7
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(http_server_requests_seconds_count{uri=\"/api/presence/stream\"}[5m]))",
+            "refId": "A",
+            "legendFormat": "SSE Connections"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "color": {
+              "mode": "palette-classic"
+            }
+          }
+        }
+      },
+      {
+        "id": 8,
+        "title": "API Response Times (p95)",
+        "type": "graph",
+        "gridPos": {
+          "x": 0,
+          "y": 23,
+          "w": 12,
+          "h": 7
+        },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{application=\"presence-service\"}[5m])) by (le, uri))",
+            "refId": "A",
+            "legendFormat": "{{uri}}"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "s",
+            "label": "Response Time"
+          }
+        ],
+        "lines": true,
+        "fill": 1,
+        "linewidth": 2
+      },
+      {
+        "id": 9,
+        "title": "Redis Connection Pool",
+        "type": "graph",
+        "gridPos": {
+          "x": 12,
+          "y": 23,
+          "w": 12,
+          "h": 7
+        },
+        "targets": [
+          {
+            "expr": "lettuce_pool_active{application=\"presence-service\"}",
+            "refId": "A",
+            "legendFormat": "Active Connections"
+          },
+          {
+            "expr": "lettuce_pool_idle{application=\"presence-service\"}",
+            "refId": "B",
+            "legendFormat": "Idle Connections"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "short",
+            "label": "Connections"
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "JVM Memory Usage",
+        "type": "graph",
+        "gridPos": {
+          "x": 0,
+          "y": 30,
+          "w": 12,
+          "h": 7
+        },
+        "targets": [
+          {
+            "expr": "jvm_memory_used_bytes{application=\"presence-service\", area=\"heap\"}",
+            "refId": "A",
+            "legendFormat": "Heap Used"
+          },
+          {
+            "expr": "jvm_memory_max_bytes{application=\"presence-service\", area=\"heap\"}",
+            "refId": "B",
+            "legendFormat": "Heap Max"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "bytes",
+            "label": "Memory"
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "title": "CPU Usage",
+        "type": "graph",
+        "gridPos": {
+          "x": 12,
+          "y": 30,
+          "w": 12,
+          "h": 7
+        },
+        "targets": [
+          {
+            "expr": "system_cpu_usage{application=\"presence-service\"}",
+            "refId": "A",
+            "legendFormat": "System CPU"
+          },
+          {
+            "expr": "process_cpu_usage{application=\"presence-service\"}",
+            "refId": "B",
+            "legendFormat": "Process CPU"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "percentunit",
+            "label": "CPU Usage",
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": 12,
+        "title": "Recent Activity Log",
+        "type": "logs",
+        "gridPos": {
+          "x": 0,
+          "y": 37,
+          "w": 24,
+          "h": 8
+        },
+        "targets": [
+          {
+            "expr": "{job=\"presence-service\"} |= \"presence\" | json",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "showTime": true,
+          "showLabels": false,
+          "wrapLogMessage": true
+        }
+      }
+    ]
+  }
+}
