@@ -10,13 +10,23 @@
     "description": "A description for 'presence.redis.ttl-seconds'"
   },
   {
-    "name": "spring.zipkin.base-url",
+    "name": "presence.redis.channel",
     "type": "java.lang.String",
-    "description": "A description for 'spring.zipkin.base-url'"
+    "description": "A description for 'presence.redis.channel'"
   },
   {
-    "name": "presence.kafka.topic",
+    "name": "presence.redis.online-users-key",
     "type": "java.lang.String",
-    "description": "A description for 'presence.kafka.topic'"
+    "description": "A description for 'presence.redis.online-users-key'"
+  },
+  {
+    "name": "presence.idempotency.ttl-minutes",
+    "type": "java.lang.String",
+    "description": "A description for 'presence.idempotency.ttl-minutes'"
+  },
+  {
+    "name": "presence.metrics.update-interval-seconds",
+    "type": "java.lang.String",
+    "description": "A description for 'presence.metrics.update-interval-seconds'"
   }
 ]}
