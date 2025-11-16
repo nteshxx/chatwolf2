@@ -191,6 +191,41 @@ services:
     networks:
       - chatwolf-network
 
+  # Presence Service
+  presence:
+    build:
+      context: ./presence
+      dockerfile: Dockerfile
+    ports:
+      - "7400:7400"
+    environment:
+      JAVA_OPTS: ${JAVA_OPTS}
+      SPRING_PROFILE: ${SPRING_PROFILE}
+      REDIS_DB: ${REDIS_DB}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      EUREKA_URL: ${EUREKA_SERVER_URL}
+      ZIPKIN_URL: ${ZIPKIN_ENDPOINT}
+      ZIPKIN_SAMPLING_RATE: ${ZIPKIN_SAMPLING_RATE}
+    depends_on:
+      redis:
+        condition: service_healthy
+      eureka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://presence:7400/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+
   # Loki - Log aggregation
   loki:
     image: grafana/loki:3.5
@@ -241,7 +276,8 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./config/prometheus/alerts.yml:/etc/prometheus/alerts/alerts.yml
       - prometheus-data:/prometheus
     command: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.path=/prometheus"]
     healthcheck:
@@ -292,8 +328,7 @@ services:
       GF_SESSION_PROVIDER_CONFIG: "dbname=${GRAFANA_DB_NAME} user=${GRAFANA_DB_USER} password=${GRAFANA_DB_PASSWORD} host=postgres port=5432 sslmode=disable"
     volumes:
       - grafana-data:/var/lib/grafana
-      - ./config/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
-      - ./config/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./config/grafana/provisioning:/etc/grafana/provisioning
     depends_on:
       postgres:
         condition: service_healthy

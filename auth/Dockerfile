@@ -24,7 +24,6 @@ WORKDIR /app
 # Copy built JAR from builder stage
 COPY --from=builder /home/gradle/build/libs/*.jar auth.jar
 
-# Expose Eureka default port
 EXPOSE 7100
 
 # Set JVM options for production
