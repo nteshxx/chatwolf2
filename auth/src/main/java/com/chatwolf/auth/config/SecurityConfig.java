@@ -1,5 +1,8 @@
 package com.chatwolf.auth.config;
 
+import com.chatwolf.auth.exception.AccessDeniedExceptionHandler;
+import com.chatwolf.auth.exception.AuthFailedExceptionHandler;
+import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -12,7 +15,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
+@AllArgsConstructor
 public class SecurityConfig {
+
+    private AuthFailedExceptionHandler authFailedExceptionHandler;
+    private AccessDeniedExceptionHandler accessDeniedExceptionHandler;
 
     @Bean
     AccessTokenFilter accessTokenFilter() {
@@ -37,6 +44,9 @@ public class SecurityConfig {
                 .csrf((csrf) -> csrf.disable())
                 .httpBasic(httpBasic -> httpBasic.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(authFailedExceptionHandler)
+                        .accessDeniedHandler(accessDeniedExceptionHandler))
                 .addFilterBefore(accessTokenFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
