@@ -2,8 +2,6 @@ package com.chatwolf.auth.service;
 
 import com.chatwolf.auth.entity.RefreshToken;
 import com.chatwolf.auth.entity.User;
-import com.chatwolf.auth.exception.UnauthorizedException;
-import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSSigner;
@@ -121,10 +119,9 @@ public class JwtService {
             RSAPublicKey publicKey = rsaKey.toRSAPublicKey();
             JwtDecoder jwtDecoder = NimbusJwtDecoder.withPublicKey(publicKey).build();
             return Optional.of(jwtDecoder.decode(token));
-        } catch (JOSEException e) {
-            throw new UnauthorizedException("jwt key not supported");
         } catch (Exception e) {
-            throw new UnauthorizedException("decoding jwt token failed");
+            log.debug("decoding jwt token failed");
+            return Optional.empty();
         }
     }
 
