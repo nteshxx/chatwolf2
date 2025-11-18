@@ -69,7 +69,7 @@ public class AuthController {
 
     @GetMapping("/refresh")
     public ResponseEntity<Object> getRefreshToken(
-            @CookieValue(name = "REFRESHTOKEN", required = true) String refreshToken) {
+            @CookieValue(name = "REFRESHTOKEN", required = false) String refreshToken) {
         if (refreshToken != null) {
             Token data = authService.refreshToken(refreshToken);
             ResponseCookie cookie = ResponseCookie.from("REFRESHTOKEN", data.getRefreshToken())
@@ -86,7 +86,7 @@ public class AuthController {
 
     @GetMapping("/token")
     public ResponseEntity<Object> getAccessToken(
-            @CookieValue(name = "REFRESHTOKEN", required = true) String refreshToken) {
+            @CookieValue(name = "REFRESHTOKEN", required = false) String refreshToken) {
         if (refreshToken != null) {
             Token data = authService.accessToken(refreshToken);
             return ResponseBuilder.build(HttpStatus.OK, null, "new access token generated", data.getAccessToken());
@@ -133,7 +133,7 @@ public class AuthController {
 
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping("/logout")
-    public ResponseEntity<Object> logout(@CookieValue(name = "REFRESHTOKEN", required = true) String refreshToken) {
+    public ResponseEntity<Object> logout(@CookieValue(name = "REFRESHTOKEN", required = false) String refreshToken) {
         if (refreshToken != null) {
             authService.logout(refreshToken);
 
@@ -151,7 +151,7 @@ public class AuthController {
 
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping("/logout-all")
-    public ResponseEntity<Object> logoutAll(@CookieValue(name = "REFRESHTOKEN", required = true) String refreshToken) {
+    public ResponseEntity<Object> logoutAll(@CookieValue(name = "REFRESHTOKEN", required = false) String refreshToken) {
         if (refreshToken != null) {
             authService.logoutAll(refreshToken);
             ResponseCookie cookie = ResponseCookie.from("REFRESHTOKEN", "")
