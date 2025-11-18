@@ -1,6 +1,5 @@
 package com.chatwolf.presence.controller;
 
-import com.chatwolf.presence.dto.OnlineStatsResponse;
 import com.chatwolf.presence.dto.PresenceEvent;
 import com.chatwolf.presence.dto.PresenceResponse;
 import com.chatwolf.presence.service.PresenceService;
@@ -32,15 +31,6 @@ public class PresenceController {
     public Mono<PresenceResponse> getPresence(@PathVariable String userId) {
         log.debug("Fetching presence for userId={}", userId);
         return presenceService.getPresence(userId).map(status -> new PresenceResponse(userId, status));
-    }
-
-    /**
-     * Get count of online users
-     * GET /api/presence/stats/online
-     */
-    @GetMapping("/stats/online")
-    public Mono<OnlineStatsResponse> getOnlineStats() {
-        return presenceService.getOnlineUsersCount().map(OnlineStatsResponse::new);
     }
 
     /**
