@@ -127,7 +127,7 @@ public class KafkaConsumerConfig {
 
     @Bean
     NewTopic chatMessagesTopic() {
-        return TopicBuilder.name("chat-messages").partitions(3).replicas(2).build();
+        return TopicBuilder.name("chat-messages").partitions(3).replicas(1).build();
     }
 
     @Bean
