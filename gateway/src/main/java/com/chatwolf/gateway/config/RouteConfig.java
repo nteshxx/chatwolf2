@@ -62,8 +62,7 @@ public class RouteConfig {
                                         .setFallbackUri("forward:/api/fallback/socket")))
                         .uri("lb:ws://socket"))
                 .route("presence", r -> r.path("/api/presence/**")
-                        .filters(f -> f.stripPrefix(2)
-                                .requestRateLimiter(config -> {
+                        .filters(f -> f.requestRateLimiter(config -> {
                                     config.setKeyResolver(userIdKeyResolver());
                                     config.setRateLimiter(lenientRateLimiter());
                                 })
