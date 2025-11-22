@@ -1,18 +1,8 @@
 {"properties": [
   {
-    "name": "spring.zipkin.base-url",
+    "name": "minio.endpoint",
     "type": "java.lang.String",
-    "description": "A description for 'spring.zipkin.base-url'"
-  },
-  {
-    "name": "minio.bucket",
-    "type": "java.lang.String",
-    "description": "A description for 'minio.bucket'"
-  },
-  {
-    "name": "minio.secret-key",
-    "type": "java.lang.String",
-    "description": "A description for 'minio.secret-key'"
+    "description": "A description for 'minio.endpoint'"
   },
   {
     "name": "minio.access-key",
@@ -20,8 +10,63 @@
     "description": "A description for 'minio.access-key'"
   },
   {
-    "name": "minio.endpoint",
+    "name": "minio.secret-key",
     "type": "java.lang.String",
-    "description": "A description for 'minio.endpoint'"
+    "description": "A description for 'minio.secret-key'"
+  },
+  {
+    "name": "minio.bucket",
+    "type": "java.lang.String",
+    "description": "A description for 'minio.bucket'"
+  },
+  {
+    "name": "minio.thumbnail-bucket",
+    "type": "java.lang.String",
+    "description": "A description for 'minio.thumbnail-bucket'"
+  },
+  {
+    "name": "minio.secure",
+    "type": "java.lang.String",
+    "description": "A description for 'minio.secure'"
+  },
+  {
+    "name": "upload.max-size",
+    "type": "java.lang.String",
+    "description": "A description for 'upload.max-size'"
+  },
+  {
+    "name": "upload.max-user-quota",
+    "type": "java.lang.String",
+    "description": "A description for 'upload.max-user-quota'"
+  },
+  {
+    "name": "upload.chunk-size",
+    "type": "java.lang.String",
+    "description": "A description for 'upload.chunk-size'"
+  },
+  {
+    "name": "upload.rate-limit",
+    "type": "java.lang.String",
+    "description": "A description for 'upload.rate-limit'"
+  },
+  {
+    "name": "storage.retention-days",
+    "type": "java.lang.String",
+    "description": "A description for 'storage.retention-days'"
+  },
+  {
+    "name": "storage.cleanup-enabled",
+    "type": "java.lang.String",
+    "description": "A description for 'storage.cleanup-enabled'"
+  },
+  {
+    "name": "storage.thumbnail-width",
+    "type": "java.lang.String",
+    "description": "A description for 'storage.thumbnail-width'"
+  },
+  {
+    "name": "storage.thumbnail-height",
+    "type": "java.lang.String",
+    "description": "A description for 'storage.thumbnail-height'"
   }
 ]}

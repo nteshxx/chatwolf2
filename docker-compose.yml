@@ -228,6 +228,45 @@ services:
     networks:
       - chatwolf-network
 
+  # Storage Service
+  storage:
+    build: ./storage/
+    image: storage:1.0.0
+    container_name: storage
+    ports:
+      - "7500:7500"
+    environment:
+      JAVA_OPTS: ${JAVA_OPTS}
+      SPRING_PROFILE: ${SPRING_PROFILE}
+      CHATWOLF_DB_HOST: ${CHATWOLF_DB_HOST}
+      CHATWOLF_DB_PORT: ${CHATWOLF_DB_PORT}
+      CHATWOLF_DB_NAME: ${CHATWOLF_DB_NAME}
+      CHATWOLF_DB_USER: ${CHATWOLF_DB_USER}
+      CHATWOLF_DB_PASSWORD: ${CHATWOLF_DB_PASSWORD}
+      JWKS_URL: ${JWKS_URL}
+      EUREKA_SERVER_URL: ${EUREKA_SERVER_URL}
+      ZIPKIN_ENDPOINT: ${ZIPKIN_ENDPOINT}
+      ZIPKIN_SAMPLING_RATE: ${ZIPKIN_SAMPLING_RATE}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://storage:7500/actuator/health | grep -q 'UP' || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+    networks:
+      - chatwolf-network
+
   # Loki - Log aggregation
   loki:
     image: grafana/loki:3.5
@@ -515,6 +554,32 @@ services:
     networks:
       - chatwolf-network
 
+  minio:
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
+    container_name: minio
+    ports:
+      - "9000:9000"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_SERVER_URL: ${MINIO_SERVER_URL}
+      MINIO_BROWSER_REDIRECT_URL: ${MINIO_CONSOLE_URL}
+      MINIO_API_REQUESTS_MAX: "10000"
+      MINIO_API_REQUESTS_DEADLINE: "10s"
+      MINIO_PROMETHEUS_AUTH_TYPE: "public"
+      MINIO_STORAGE_CLASS_STANDARD: "EC:2"
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://minio:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - chatwolf-network
+
 volumes:
   loki-data:
   prometheus-data:
@@ -526,6 +591,7 @@ volumes:
   postgres-logs:
   kafka-data:
   kafka-metadata:
+  minio-data:
 
 networks:
   chatwolf-network:
