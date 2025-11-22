@@ -1,13 +1,15 @@
 apiVersion: 1
 
 providers:
-  - name: 'ChatWolf Dashboards'
+  - name: 'Chatwolf Dashboard'
     orgId: 1
-    folder: 'ChatWolf'
+    folder: ''
+    folderUid:
     type: file
     disableDeletion: false
     updateIntervalSeconds: 10
     allowUiUpdates: true
     options:
       path: /etc/grafana/provisioning/dashboards
+      foldersFromFilesStructure: true
       
