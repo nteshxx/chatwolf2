@@ -17,12 +17,19 @@ public class NotificationService {
     private final MeterRegistry meterRegistry;
 
     public void process(NotificationEvent ev) {
-        meterRegistry.counter("notifications.received", "type", ev.getType()).increment();
-        if ("EMAIL".equalsIgnoreCase(ev.getType())) sendEmail(ev);
-        else if ("SMS".equalsIgnoreCase(ev.getType())) sendSms(ev);
-        else {
-            log.warn("unknown notification type {}", ev.getType());
-            meterRegistry.counter("notifications.unknown").increment();
+        meterRegistry
+                .counter(
+                        "notifications.received",
+                        "type",
+                        ev.getType().toString().toUpperCase())
+                .increment();
+        switch (ev.getType()) {
+            case EMAIL -> sendEmail(ev);
+            case SMS -> sendSms(ev);
+            default -> {
+                log.warn("Unknown notification type: {}", ev.getType());
+                meterRegistry.counter("notifications.unknown").increment();
+            }
         }
     }
 
@@ -41,7 +48,7 @@ public class NotificationService {
     }
 
     private void sendSms(NotificationEvent ev) {
-        // integrate Twilio client here; for now log
+        // integrate sms client here; for now log
         log.info("sendSms to {}: {}", ev.getRecipient(), ev.getBody());
         meterRegistry.counter("notifications.sent", "type", "SMS").increment();
     }
