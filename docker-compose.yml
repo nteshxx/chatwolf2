@@ -267,6 +267,72 @@ services:
     networks:
       - chatwolf-network
 
+  # Notification Service
+  notification:
+    build: ./notification/
+    image: notification:1.0.0
+    container_name: notification
+    ports:
+      - "7600:7600"
+    environment:
+      JAVA_OPTS: ${JAVA_OPTS}
+      SPRING_PROFILE: ${SPRING_PROFILE}
+      KAFKA_BROKERS: ${KAFKA_BROKERS}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      ZIPKIN_ENDPOINT: ${ZIPKIN_ENDPOINT}
+      ZIPKIN_SAMPLING_RATE: ${ZIPKIN_SAMPLING_RATE}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://notification:7600/actuator/health | grep -q 'UP' || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+    networks:
+      - chatwolf-network
+
+  # API Service
+  api:
+    build: ./api/
+    image: api:1.0.0
+    container_name: api
+    ports:
+      - "7700:7700"
+    environment:
+      JAVA_OPTS: ${JAVA_OPTS}
+      SPRING_PROFILE: ${SPRING_PROFILE}
+      CHATWOLF_DB_HOST: ${CHATWOLF_DB_HOST}
+      CHATWOLF_DB_PORT: ${CHATWOLF_DB_PORT}
+      CHATWOLF_DB_NAME: ${CHATWOLF_DB_NAME}
+      CHATWOLF_DB_USER: ${CHATWOLF_DB_USER}
+      CHATWOLF_DB_PASSWORD: ${CHATWOLF_DB_PASSWORD}
+      JWKS_URL: ${JWKS_URL}
+      EUREKA_SERVER_URL: ${EUREKA_SERVER_URL}
+      ZIPKIN_ENDPOINT: ${ZIPKIN_ENDPOINT}
+      ZIPKIN_SAMPLING_RATE: ${ZIPKIN_SAMPLING_RATE}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://api:7700/actuator/health | grep -q 'UP' || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+    networks:
+      - chatwolf-network
+
   # Loki - Log aggregation
   loki:
     image: grafana/loki:3.5
