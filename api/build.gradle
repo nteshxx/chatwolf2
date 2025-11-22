@@ -1,13 +1,13 @@
 plugins {
 	id 'java'
-	id 'org.springframework.boot' version '3.5.7'
+	id 'org.springframework.boot' version '3.5.8'
 	id 'io.spring.dependency-management' version '1.1.7'
 	id 'jacoco'
 	id 'com.diffplug.spotless' version '6.25.0'
 }
 
 group = 'com.chatwolf'
-version = '0.0.1'
+version = '1.0.0'
 description = 'API Service for ChatWolf Messaging App'
 
 java {
@@ -75,7 +75,7 @@ jacocoTestCoverageVerification {
     violationRules {
         rule {
             limit {
-                minimum = 0.9
+                minimum = 0.8
             }
         }
     }

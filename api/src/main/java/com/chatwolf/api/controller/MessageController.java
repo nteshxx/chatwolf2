@@ -11,13 +11,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/chats/{chatId}/messages")
+@RequestMapping("/api")
 @RequiredArgsConstructor
 public class MessageController {
 
     private final MessageService messageService;
 
-    @GetMapping
+    @GetMapping("/messages")
     public ResponseEntity<List<ConversationSummary>> getMessages(@PathVariable String userId) {
         return ResponseEntity.ok(messageService.getUserConversations(userId));
     }
