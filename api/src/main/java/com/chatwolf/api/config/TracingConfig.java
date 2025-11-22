@@ -1,4 +1,4 @@
-package com.chatwolf.storage.config;
+package com.chatwolf.api.config;
 
 import io.micrometer.tracing.exporter.SpanExportingPredicate;
 import org.springframework.context.annotation.Bean;
