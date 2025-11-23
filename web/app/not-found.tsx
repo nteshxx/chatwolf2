@@ -20,9 +20,7 @@ export default function NotFound() {
         </p>
 
         <Link href="/">
-          <motion.button
-            className="px-8 py-3 bg-black text-white border-2 tracking-wider border-white rounded-lg cursor-pointer font-medium hover:bg-white hover:text-black"
-          >
+          <motion.button className="px-8 py-3 bg-black text-white border-2 tracking-wider border-white rounded-lg cursor-pointer font-medium hover:bg-white hover:text-black">
             Go Home
           </motion.button>
         </Link>
