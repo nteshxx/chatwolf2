@@ -10,7 +10,7 @@ const Home = () => {
   const { themeId, theme, setTheme } = useTheme();
 
   return (
-    <div className={`min-h-screen bg-linear-to-br ${theme.bg} text-slate-100`}>
+    <div className={`min-h-screen bg-linear-to-br ${theme.bg}`}>
       <ThemeToggle />
       <div className="grid grid-cols-2 h-screen max-w-5xl:grid-cols-1">
         <div
@@ -21,8 +21,7 @@ const Home = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 1 }}
-            className="mb-2 text-2xl tracking-wide
-           max-w-md:mb-0 max-w-md:text-[1.4rem]"
+            className={`mb-2 text-2xl tracking-wide ${theme.textSecondary}`}
           >
             Realtime Messaging
           </motion.h1>
@@ -34,20 +33,19 @@ const Home = () => {
             initial="hidden"
             animate="visible"
             transition={{ duration: 1 }}
-            className="my-12 text-6xl font-light leading-normal tracking-wide
-          max-w-lg:my-4 max-w-lg:text-[3rem]"
+            className={`my-12 text-6xl leading-normal tracking-wide ${theme.textPrimary} font-light`}
           >
             Built for the Modern Pack!
           </motion.p>
 
-          <Link href="/login">
+          <Link href="/auth/login">
             <motion.button
               initial={{ opacity: 0 }}
               animate={{
                 opacity: 1,
                 transition: { duration: 1 },
               }}
-              className={`mt-8 px-12 py-3 text-base font-medium border-2 rounded-full cursor-pointer border-none bg-linear-to-r ${theme.primary} text-slate-950 shadow-lg`}
+              className={`mt-8 px-12 py-3 rounded-lg text-baserounded-lg font-medium cursor-pointer transition-all ${theme.button.primary}`}
             >
               Start Howling
             </motion.button>

@@ -5,7 +5,7 @@ import { Theme } from '@/types/theme.type';
 import { motion } from 'motion/react';
 
 export default function ThemeToggle() {
-  const { themeId, setTheme } = useTheme();
+  const { themeId, theme, setTheme } = useTheme();
 
   return (
     <motion.div
@@ -23,10 +23,10 @@ export default function ThemeToggle() {
           <button
             key={id}
             onClick={() => setTheme(id)}
-            className={`rounded-full border px-3 py-1 text-xs capitalize ${
+            className={`rounded-full px-3 py-1 text-xs capitalize ${
               themeId === id
-                ? 'border-white/80 bg-white/10'
-                : 'border-white/20 bg-black/20 text-slate-300 hover:border-white/40'
+                ? theme.button.primary
+                : theme.button.secondary
             }`}
           >
             {themes[id].name}
