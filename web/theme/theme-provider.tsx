@@ -22,6 +22,9 @@ export const themes = {
     textPrimary: 'text-slate-100',
     textSecondary: 'text-slate-400',
     textMuted: 'text-slate-600',
+
+    // Loader
+    loader: 'border-slate-400',
     
     // Borders
     border: 'border-slate-800',
@@ -69,6 +72,9 @@ export const themes = {
     textPrimary: 'text-slate-100',
     textSecondary: 'text-purple-300',
     textMuted: 'text-purple-600',
+
+    // Loader
+    loader: 'border-purple-300',
     
     // Borders
     border: 'border-purple-800',
@@ -116,6 +122,9 @@ export const themes = {
     textPrimary: 'text-slate-100',
     textSecondary: 'text-amber-300',
     textMuted: 'text-rose-800',
+
+    // Loader
+    loader: 'border-amber-300',
     
     // Borders
     border: 'border-rose-800',
@@ -163,6 +172,9 @@ export const themes = {
     textPrimary: 'text-slate-900',
     textSecondary: 'text-slate-600',
     textMuted: 'text-slate-400',
+
+    // Loader
+    loader: 'border-slate-600',
     
     // Borders
     border: 'border-slate-200',

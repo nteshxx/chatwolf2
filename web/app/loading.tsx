@@ -1,10 +1,13 @@
 'use client';
 
+import { useTheme } from '@/theme/theme-provider';
 import { motion } from 'framer-motion';
 
 export default function Loading() {
+  const { theme } = useTheme();
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black">
+    <div className={`min-h-screen flex items-center justify-center bg-linear-to-br ${theme.bg}`}>
       <div className="text-center">
         <motion.div
           className="inline-block"
@@ -17,7 +20,7 @@ export default function Loading() {
             ease: 'linear',
           }}
         >
-          <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full" />
+          <div className={`w-16 h-16 border-4 ${theme.loader} border-t-transparent rounded-full`} />
         </motion.div>
       </div>
     </div>
