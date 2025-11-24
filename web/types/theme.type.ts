@@ -1,1 +1,1 @@
-export type Theme = 'night' | 'neon' | 'sunset';
+export type Theme = 'night' | 'neon' | 'sunset' | 'dawn';

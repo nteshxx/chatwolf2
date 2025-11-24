@@ -1,5 +1,6 @@
 'use client';
 
+import Logo from '@/components/ui/ThemeLogo';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import { useTheme } from '@/theme/theme-provider';
 import { motion } from 'motion/react';
@@ -57,28 +58,7 @@ const Home = () => {
          max-[992px]:col-start-1 max-[992px]:row-start-1
          max-[280px]:p-4"
         >
-          <motion.img
-            src="/icons/logo.svg"
-            alt="logo"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{
-              opacity: 1,
-              y: [0, -20, 0],
-            }}
-            transition={{
-              opacity: { duration: 1 },
-              y: {
-                duration: 2,
-                repeat: Infinity,
-                ease: 'easeInOut',
-                delay: 1,
-              },
-            }}
-            className="absolute w-full h-full 
-  max-w-[360px] max-h-[360px]
-  max-[768px]:min-w-[300px] max-[768px]:min-h-[300px]
-  max-[576px]:min-w-[150px] max-[576px]:min-h-[150px]"
-          />
+          <Logo width={300} height={300} />
         </div>
       </div>
     </div>
