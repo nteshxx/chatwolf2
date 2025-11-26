@@ -3,58 +3,44 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/store/auth.store';
+import { useThemeStore } from '@/store/theme.store';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { register, isLoading, error, setError, clearError } = useAuthStore();
+  const { theme } = useThemeStore();
+  
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
     confirmPassword: '',
-  });
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  })
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError('');
+    e.preventDefault()
+    clearError()
 
-    // Validate passwords match
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
-      setIsLoading(false);
       return;
     }
 
     try {
-      // Add your register API call here
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-        }),
-      });
+      await register(formData.name, formData.email, formData.password)
+      router.push('/verify-email')
 
-      if (!response.ok) throw new Error('Registration failed');
-
-      // Redirect to chat after successful registration
-      router.push('/chat');
-    } catch (err) {
-      setError('Registration failed. Please try again.');
-    } finally {
-      setIsLoading(false);
+    } catch (error) {
+      console.error('Registration error:', error)
     }
-  };
+  }
 
   return (
-    <div className="space-y-6">
+    <div className={`rounded-2xl ${theme.glass} ${theme.textPrimary} space-y-6 p-8`}>
       <div>
-        <h2 className="text-3xl font-bold text-white mb-2">Create Account</h2>
-        <p className="text-gray-400">Sign up to get started with ChatWolf</p>
+        <h2 className={`bg-linear-to-r ${theme.primary} bg-clip-text text-3xl font-bold text-transparent mb-2`}>Join The Pack</h2>
+        <p className={`${theme.textSecondary} text-sm`}>Sign up to get started with ChatWolf</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -67,7 +53,7 @@ export default function RegisterPage() {
         <div>
           <label
             htmlFor="name"
-            className="block text-sm font-medium text-gray-300 mb-2"
+            className={`mb-2 block text-sm font-medium ${theme.textPrimary}`}
           >
             Full Name
           </label>
@@ -77,17 +63,18 @@ export default function RegisterPage() {
             required
             value={formData.name}
             onChange={e => setFormData({ ...formData, name: e.target.value })}
-            className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent"
+            className={`w-full rounded-lg px-4 py-2.5 outline-none transition-all ${theme.input}`}
             placeholder="John Doe"
+            autoComplete='off'
           />
         </div>
 
         <div>
           <label
             htmlFor="email"
-            className="block text-sm font-medium text-gray-300 mb-2"
+            className={`mb-2 block text-sm font-medium ${theme.textPrimary}`}
           >
-            Email Address
+            Email
           </label>
           <input
             id="email"
@@ -95,15 +82,16 @@ export default function RegisterPage() {
             required
             value={formData.email}
             onChange={e => setFormData({ ...formData, email: e.target.value })}
-            className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent"
+            className={`w-full rounded-lg px-4 py-2.5 outline-none transition-all ${theme.input}`}
             placeholder="you@example.com"
+            autoComplete='off'
           />
         </div>
 
         <div>
           <label
             htmlFor="password"
-            className="block text-sm font-medium text-gray-300 mb-2"
+            className={`mb-2 block text-sm font-medium ${theme.textPrimary}`}
           >
             Password
           </label>
@@ -116,15 +104,16 @@ export default function RegisterPage() {
             onChange={e =>
               setFormData({ ...formData, password: e.target.value })
             }
-            className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent"
+            className={`w-full rounded-lg px-4 py-2.5 outline-none transition-all ${theme.input}`}
             placeholder="••••••••"
+            autoComplete='off'
           />
         </div>
 
         <div>
           <label
             htmlFor="confirmPassword"
-            className="block text-sm font-medium text-gray-300 mb-2"
+            className={`mb-2 block text-sm font-medium ${theme.textPrimary}`}
           >
             Confirm Password
           </label>
@@ -137,45 +126,27 @@ export default function RegisterPage() {
             onChange={e =>
               setFormData({ ...formData, confirmPassword: e.target.value })
             }
-            className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent"
+            className={`w-full rounded-lg px-4 py-2.5 mb-3 outline-none transition-all ${theme.input}`}
             placeholder="••••••••"
+            autoComplete='off'
           />
-        </div>
-
-        <div className="flex items-start">
-          <input
-            id="terms"
-            type="checkbox"
-            required
-            className="w-4 h-4 mt-1 bg-gray-900 border-gray-700 rounded text-white focus:ring-white"
-          />
-          <label htmlFor="terms" className="ml-2 text-sm text-gray-400">
-            I agree to the{' '}
-            <Link href="/terms" className="text-white hover:underline">
-              Terms of Service
-            </Link>{' '}
-            and{' '}
-            <Link href="/privacy" className="text-white hover:underline">
-              Privacy Policy
-            </Link>
-          </label>
         </div>
 
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full py-3 bg-white text-black font-medium rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className={`w-full py-3 font-medium rounded-lg px-6 text-sm  ${theme.button.primary} cursor-pointer`}
         >
-          {isLoading ? 'Creating account...' : 'Create Account'}
+          {isLoading ? 'Creating Account...' : 'Create Account'}
         </button>
       </form>
 
       <div className="text-center">
-        <p className="text-gray-400">
+        <p className={`${theme.textSecondary}`}>
           Already have an account?{' '}
           <Link
             href="/auth/login"
-            className="text-white font-medium hover:underline"
+            className={`font-medium ${theme.textPrimary} hover:underline`}
           >
             Sign in
           </Link>

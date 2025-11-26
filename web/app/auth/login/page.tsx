@@ -3,45 +3,41 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useThemeStore } from '@/store/theme.store';
+import { useAuthStore } from '@/store/auth.store';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login, isLoading, error, clearError, pendingVerificationEmail } = useAuthStore()
+  const {theme} = useThemeStore();
+  
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-  });
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  })
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError('');
+    e.preventDefault()
+    clearError()
 
     try {
-      // Add your login API call here
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) throw new Error('Login failed');
-
-      // Redirect to chat after successful login
-      router.push('/chat');
-    } catch (err) {
-      setError('Invalid email or password');
-    } finally {
-      setIsLoading(false);
+      await login(formData.email, formData.password)
+      
+      if (pendingVerificationEmail) {
+        router.push('/verify-email')
+      } else {
+        router.push('/chat')
+      }
+    } catch (error) {
+      console.error('Login error:', error)
     }
-  };
+  }
 
   return (
-    <div className="space-y-6">
+    <div className={`rounded-2xl ${theme.glass} ${theme.textPrimary} space-y-6 p-8`}>
       <div>
-        <h2 className="text-3xl font-bold text-white mb-2">Welcome Back</h2>
-        <p className="text-gray-400">Sign in to continue to ChatWolf</p>
+        <h2 className={`bg-linear-to-r ${theme.primary} bg-clip-text text-3xl font-bold text-transparent mb-2`}>Your Pack Awaits</h2>
+        <p className={`${theme.textSecondary} text-sm`}>Sign in to continue to ChatWolf</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -54,9 +50,9 @@ export default function LoginPage() {
         <div>
           <label
             htmlFor="email"
-            className="block text-sm font-medium text-gray-300 mb-2"
+            className={`mb-2 block text-sm font-medium ${theme.textPrimary}`}
           >
-            Email Address
+            Email
           </label>
           <input
             id="email"
@@ -64,15 +60,16 @@ export default function LoginPage() {
             required
             value={formData.email}
             onChange={e => setFormData({ ...formData, email: e.target.value })}
-            className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent"
+            className={`w-full rounded-lg px-4 py-2.5 outline-none transition-all ${theme.input}`}
             placeholder="you@example.com"
+            autoComplete='off'
           />
         </div>
 
         <div>
           <label
             htmlFor="password"
-            className="block text-sm font-medium text-gray-300 mb-2"
+            className={`mb-2 block text-sm font-medium ${theme.textPrimary}`}
           >
             Password
           </label>
@@ -84,22 +81,16 @@ export default function LoginPage() {
             onChange={e =>
               setFormData({ ...formData, password: e.target.value })
             }
-            className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent"
+            className={`w-full rounded-lg px-4 py-2.5 outline-none transition-all ${theme.input}`}
             placeholder="••••••••"
+            autoComplete='off'
           />
         </div>
 
-        <div className="flex items-center justify-between">
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              className="w-4 h-4 bg-gray-900 border-gray-700 rounded text-white focus:ring-white"
-            />
-            <span className="ml-2 text-sm text-gray-400">Remember me</span>
-          </label>
+        <div className="flex items-center justify-end">
           <Link
-            href="/forgot-password"
-            className="text-sm text-white hover:underline"
+            href="/auth/forgot-password"
+            className={`text-sm ${theme.textSecondary} hover:underline hover:${theme.textPrimary}`}
           >
             Forgot password?
           </Link>
@@ -108,18 +99,18 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full py-3 bg-white text-black font-medium rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className={`w-full py-3 font-medium rounded-lg px-6 text-sm  ${theme.button.primary} cursor-pointer`}
         >
-          {isLoading ? 'Signing in...' : 'Sign In'}
+          {isLoading ? 'Signing In...' : 'Sign In'}
         </button>
       </form>
 
       <div className="text-center">
-        <p className="text-gray-400">
+        <p className={`${theme.textSecondary}`}>
           Don't have an account?{' '}
           <Link
             href="/auth/register"
-            className="text-white font-medium hover:underline"
+            className={`font-medium ${theme.textPrimary} hover:underline`}
           >
             Sign up
           </Link>

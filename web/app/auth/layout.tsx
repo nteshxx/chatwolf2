@@ -1,3 +1,6 @@
+'use client'
+
+import { useThemeStore } from '@/store/theme.store';
 import Image from 'next/image';
 
 export default function AuthLayout({
@@ -5,21 +8,23 @@ export default function AuthLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const { theme } = useThemeStore();
+
   return (
-    <div className="min-h-screen bg-black flex">
+    <div className={`min-h-screen bg-linear-to-br ${theme.bg} ${theme.textPrimary} flex`}>
       {/* Left Side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-linear-to-br from-gray-900 to-black items-center justify-center p-12">
+      <div className="hidden lg:flex lg:w-1/2 items-center justify-center p-12">
         <div className="text-center">
           <Image
-            src="/logo.svg"
+            src="/icons/logo.svg"
             alt="ChatWolf Logo"
             width={200}
             height={200}
             className="mx-auto mb-8"
           />
-          <h1 className="text-4xl font-bold text-white mb-4">ChatWolf</h1>
-          <p className="text-gray-400 text-lg">
-            Connect, Chat, and Collaborate
+          <h1 className="text-4xl font-bold mb-4">ChatWolf</h1>
+          <p className={`${theme.textSecondary} text-lg`}>
+            The Untamed Network
           </p>
         </div>
       </div>
@@ -36,7 +41,7 @@ export default function AuthLayout({
               height={80}
               className="mx-auto mb-4"
             />
-            <h2 className="text-2xl font-bold text-white">ChatWolf</h2>
+            <h2 className="text-2xl font-bold">ChatWolf</h2>
           </div>
 
           {children}
