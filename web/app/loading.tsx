@@ -1,10 +1,10 @@
 'use client';
 
-import { useTheme } from '@/theme/theme-provider';
+import { useThemeStore } from '@/store/theme.store';
 import { motion } from 'framer-motion';
 
 export default function Loading() {
-  const { theme } = useTheme();
+  const theme = useThemeStore((state) => state.theme)
 
   return (
     <div className={`min-h-screen flex items-center justify-center bg-linear-to-br ${theme.bg}`}>

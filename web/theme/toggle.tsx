@@ -1,11 +1,12 @@
 'use client';
 
-import { themes, useTheme } from '@/theme/theme-provider';
+import { useThemeStore } from '@/store/theme.store';
 import { Theme } from '@/types/theme.type';
 import { motion } from 'motion/react';
+import { themes } from './themes';
 
 export default function ThemeToggle() {
-  const { themeId, theme, setTheme } = useTheme();
+  const { themeId, theme, setTheme } = useThemeStore();
 
   return (
     <motion.div

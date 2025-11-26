@@ -1,13 +1,13 @@
 'use client';
 
-import Logo from '@/components/ui/ThemeLogo';
-import ThemeToggle from '@/components/ui/ThemeToggle';
-import { useTheme } from '@/theme/theme-provider';
+import { useThemeStore } from '@/store/theme.store';
+import Logo from '@/theme/logo';
+import ThemeToggle from '@/theme/toggle';
 import { motion } from 'motion/react';
 import Link from 'next/link';
 
 const Home = () => {
-  const { themeId, theme, setTheme } = useTheme();
+  const theme = useThemeStore((state) => state.theme);
 
   return (
     <div className={`min-h-screen bg-linear-to-br ${theme.bg}`}>

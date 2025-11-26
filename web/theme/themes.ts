@@ -1,9 +1,3 @@
-'use client';
-
-import { Theme } from '@/types/theme.type';
-import { createContext, useContext, useState } from 'react';
-
-// themes
 export const themes = {
   night: {
     id: 'night',
@@ -205,41 +199,3 @@ export const themes = {
     description: 'Clean, bright interface for daylight sessions.',
   },
 };
-
-// props
-interface ThemeContextType {
-  themeId: Theme;
-  theme: (typeof themes)[Theme];
-  setTheme: (id: Theme) => void;
-}
-
-// context
-export const ThemeContext = createContext<ThemeContextType | null>(null);
-
-// provider
-export default function ThemeProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const [themeId, setTheme] = useState<Theme>('night');
-
-  return (
-    <ThemeContext.Provider
-      value={{
-        themeId,
-        theme: themes[themeId],
-        setTheme,
-      }}
-    >
-      {children}
-    </ThemeContext.Provider>
-  );
-}
-
-// hook
-export function useTheme() {
-  const ctx = useContext(ThemeContext);
-  if (!ctx) throw new Error('useTheme must be used inside <ThemeProvider>');
-  return ctx;
-}

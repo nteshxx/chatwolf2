@@ -1,10 +1,10 @@
 'use client';
-
-import { themes, useTheme } from '@/theme/theme-provider';
+import { useThemeStore } from '@/store/theme.store';
+import { themes } from '@/theme/themes';
 import { Theme } from '@/types/theme.type';
 
 export default function ThemesPage() {
-  const { themeId, theme, setTheme } = useTheme();
+  const { themeId, theme, setTheme } = useThemeStore();
 
   return (
     <div className={`min-h-screen bg-linear-to-br ${theme.bg} ${theme.textPrimary}`}>

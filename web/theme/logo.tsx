@@ -1,4 +1,4 @@
-import { useTheme } from '@/theme/theme-provider';
+import { useThemeStore } from '@/store/theme.store';
 import { motion } from 'motion/react';
 
 interface LogoProps {
@@ -8,7 +8,7 @@ interface LogoProps {
 }
 
 export default function Logo({ width = 40, height = 40, className = '' }: LogoProps) {
-  const { themeId } = useTheme();
+  const themeId = useThemeStore((state) => state.themeId);
 
   const logoVariants = {
     night: {
