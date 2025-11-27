@@ -25,9 +25,7 @@ export default function ThemeToggle() {
             key={id}
             onClick={() => setTheme(id)}
             className={`rounded-full px-3 py-1 text-xs capitalize ${
-              themeId === id
-                ? theme.button.primary
-                : theme.button.secondary
+              themeId === id ? theme.button.primary : theme.button.secondary
             }`}
           >
             {themes[id].name}

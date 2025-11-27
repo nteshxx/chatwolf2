@@ -1,8 +1,9 @@
-import { AuthState } from '@/interfaces/auth-state'
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { AuthState } from '@/interfaces/auth-state';
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7000/api/auth'
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7000/api/auth';
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -16,28 +17,28 @@ export const useAuthStore = create<AuthState>()(
       pendingVerificationEmail: null,
 
       login: async (email, password) => {
-        set({ isLoading: true, error: null })
-        
+        set({ isLoading: true, error: null });
+
         try {
           const response = await fetch(`${API_URL}/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password }),
-          })
+          });
 
-          const data = await response.json()
+          const data = await response.json();
 
           if (!response.ok) {
-            throw new Error(data.message || 'Login failed')
+            throw new Error(data.message || 'Login failed');
           }
 
           if (!data.emailVerified) {
-            set({ 
+            set({
               pendingVerificationEmail: email,
               isLoading: false,
-              error: 'Please verify your email first'
-            })
-            return
+              error: 'Please verify your email first',
+            });
+            return;
           }
 
           set({
@@ -47,60 +48,60 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: true,
             isLoading: false,
             error: null,
-          })
+          });
         } catch (error: any) {
-          set({ 
-            isLoading: false, 
-            error: error.message || 'Login failed' 
-          })
-          throw error
+          set({
+            isLoading: false,
+            error: error.message || 'Login failed',
+          });
+          throw error;
         }
       },
 
       register: async (name, email, password) => {
-        set({ isLoading: true, error: null })
-        
+        set({ isLoading: true, error: null });
+
         try {
           const response = await fetch(`${API_URL}/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name, email, password }),
-          })
+          });
 
-          const data = await response.json()
+          const data = await response.json();
 
           if (!response.ok) {
-            throw new Error(data.message || 'Registration failed')
+            throw new Error(data.message || 'Registration failed');
           }
 
-          set({ 
+          set({
             pendingVerificationEmail: email,
             isLoading: false,
             error: null,
-          })
+          });
         } catch (error: any) {
-          set({ 
-            isLoading: false, 
-            error: error.message || 'Registration failed' 
-          })
-          throw error
+          set({
+            isLoading: false,
+            error: error.message || 'Registration failed',
+          });
+          throw error;
         }
       },
 
       verifyEmail: async (email, otp) => {
-        set({ isLoading: true, error: null })
-        
+        set({ isLoading: true, error: null });
+
         try {
           const response = await fetch(`${API_URL}/verify-email`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, otp }),
-          })
+          });
 
-          const data = await response.json()
+          const data = await response.json();
 
           if (!response.ok) {
-            throw new Error(data.message || 'Verification failed')
+            throw new Error(data.message || 'Verification failed');
           }
 
           set({
@@ -111,39 +112,39 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: null,
             pendingVerificationEmail: null,
-          })
+          });
         } catch (error: any) {
-          set({ 
-            isLoading: false, 
-            error: error.message || 'Verification failed' 
-          })
-          throw error
+          set({
+            isLoading: false,
+            error: error.message || 'Verification failed',
+          });
+          throw error;
         }
       },
 
-      resendOTP: async (email) => {
-        set({ isLoading: true, error: null })
-        
+      resendOTP: async email => {
+        set({ isLoading: true, error: null });
+
         try {
           const response = await fetch(`${API_URL}/resend-otp`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email }),
-          })
+          });
 
-          const data = await response.json()
+          const data = await response.json();
 
           if (!response.ok) {
-            throw new Error(data.message || 'Failed to resend OTP')
+            throw new Error(data.message || 'Failed to resend OTP');
           }
 
-          set({ isLoading: false, error: null })
+          set({ isLoading: false, error: null });
         } catch (error: any) {
-          set({ 
-            isLoading: false, 
-            error: error.message || 'Failed to resend OTP' 
-          })
-          throw error
+          set({
+            isLoading: false,
+            error: error.message || 'Failed to resend OTP',
+          });
+          throw error;
         }
       },
 
@@ -155,14 +156,14 @@ export const useAuthStore = create<AuthState>()(
           isAuthenticated: false,
           error: null,
           pendingVerificationEmail: null,
-        })
+        });
       },
 
       refreshAccessToken: async () => {
-        const { refreshToken } = get()
+        const { refreshToken } = get();
         if (!refreshToken) {
-          get().logout()
-          return
+          get().logout();
+          return;
         }
 
         try {
@@ -170,27 +171,27 @@ export const useAuthStore = create<AuthState>()(
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ refreshToken }),
-          })
+          });
 
-          const data = await response.json()
+          const data = await response.json();
 
           if (!response.ok) {
-            throw new Error('Token refresh failed')
+            throw new Error('Token refresh failed');
           }
 
           set({
             token: data.accessToken,
             refreshToken: data.refreshToken,
-          })
+          });
         } catch (error) {
-          get().logout()
-          throw error
+          get().logout();
+          throw error;
         }
       },
 
-      updateUser: (userData) => 
-        set((state) => ({
-          user: state.user ? { ...state.user, ...userData } : null
+      updateUser: userData =>
+        set(state => ({
+          user: state.user ? { ...state.user, ...userData } : null,
         })),
 
       setError: (error: string) => set({ error }),
@@ -199,7 +200,7 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'auth-storage',
-      partialize: (state) => ({
+      partialize: state => ({
         user: state.user,
         token: state.token,
         refreshToken: state.refreshToken,
@@ -207,4 +208,4 @@ export const useAuthStore = create<AuthState>()(
       }),
     }
   )
-)
+);

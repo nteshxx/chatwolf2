@@ -1,7 +1,7 @@
-import { ChatState } from '@/interfaces/chat-state'
-import { Message } from '@/interfaces/message'
-import { create } from 'zustand'
-import { devtools } from 'zustand/middleware'
+import { ChatState } from '@/interfaces/chat-state';
+import { Message } from '@/interfaces/message';
+import { create } from 'zustand';
+import { devtools } from 'zustand/middleware';
 
 export const useChatStore = create<ChatState>()(
   devtools(
@@ -14,59 +14,59 @@ export const useChatStore = create<ChatState>()(
       typingUsers: new Set(),
 
       connect: (url, token) => {
-        const ws = new WebSocket(`${url}?token=${token}`)
-        
-        ws.onopen = () => {
-          console.log('WebSocket connected')
-          set({ isConnected: true })
-        }
+        const ws = new WebSocket(`${url}?token=${token}`);
 
-        ws.onmessage = (event) => {
-          const data = JSON.parse(event.data)
-          
+        ws.onopen = () => {
+          console.log('WebSocket connected');
+          set({ isConnected: true });
+        };
+
+        ws.onmessage = event => {
+          const data = JSON.parse(event.data);
+
           switch (data.type) {
             case 'message':
-              get().addMessage(data.payload)
-              break
+              get().addMessage(data.payload);
+              break;
             case 'typing':
-              get().setUserTyping(data.userId, data.isTyping)
-              break
+              get().setUserTyping(data.userId, data.isTyping);
+              break;
             case 'room_update':
-              get().addRoom(data.payload)
-              break
+              get().addRoom(data.payload);
+              break;
           }
-        }
+        };
 
-        ws.onerror = (error) => {
-          console.error('WebSocket error:', error)
-        }
+        ws.onerror = error => {
+          console.error('WebSocket error:', error);
+        };
 
         ws.onclose = () => {
-          console.log('WebSocket disconnected')
-          set({ isConnected: false, ws: null })
-          
+          console.log('WebSocket disconnected');
+          set({ isConnected: false, ws: null });
+
           // Auto-reconnect after 3 seconds
           setTimeout(() => {
             if (!get().ws) {
-              get().connect(url, token)
+              get().connect(url, token);
             }
-          }, 3000)
-        }
+          }, 3000);
+        };
 
-        set({ ws })
+        set({ ws });
       },
 
       disconnect: () => {
-        const { ws } = get()
+        const { ws } = get();
         if (ws) {
-          ws.close()
-          set({ ws: null, isConnected: false })
+          ws.close();
+          set({ ws: null, isConnected: false });
         }
       },
 
-      sendMessage: (content) => {
-        const { ws, activeRoomId } = get()
-        if (!ws || !activeRoomId) return
+      sendMessage: content => {
+        const { ws, activeRoomId } = get();
+        if (!ws || !activeRoomId) return;
 
         const tempMessage: Message = {
           id: `temp-${Date.now()}`,
@@ -74,71 +74,73 @@ export const useChatStore = create<ChatState>()(
           username: 'You',
           content,
           timestamp: Date.now(),
-          status: 'sending'
-        }
+          status: 'sending',
+        };
 
-        set((state) => ({
-          messages: [...state.messages, tempMessage]
-        }))
+        set(state => ({
+          messages: [...state.messages, tempMessage],
+        }));
 
-        ws.send(JSON.stringify({
-          type: 'message',
-          roomId: activeRoomId,
-          content
-        }))
+        ws.send(
+          JSON.stringify({
+            type: 'message',
+            roomId: activeRoomId,
+            content,
+          })
+        );
       },
 
-      addMessage: (message) => {
-        set((state) => ({
-          messages: [...state.messages, message]
-        }))
+      addMessage: message => {
+        set(state => ({
+          messages: [...state.messages, message],
+        }));
       },
 
       updateMessageStatus: (id, status) => {
-        set((state) => ({
+        set(state => ({
           messages: state.messages.map(msg =>
             msg.id === id ? { ...msg, status } : msg
-          )
-        }))
+          ),
+        }));
       },
 
-      setActiveRoom: (roomId) => {
-        set({ activeRoomId: roomId })
-        get().updateUnreadCount(roomId, 0)
+      setActiveRoom: roomId => {
+        set({ activeRoomId: roomId });
+        get().updateUnreadCount(roomId, 0);
       },
 
-      addRoom: (room) => {
-        set((state) => {
-          const exists = state.rooms.find(r => r.id === room.id)
+      addRoom: room => {
+        set(state => {
+          const exists = state.rooms.find(r => r.id === room.id);
           if (exists) {
             return {
-              rooms: state.rooms.map(r => r.id === room.id ? room : r)
-            }
+              rooms: state.rooms.map(r => (r.id === room.id ? room : r)),
+            };
           }
-          return { rooms: [...state.rooms, room] }
-        })
+          return { rooms: [...state.rooms, room] };
+        });
       },
 
       updateUnreadCount: (roomId, count) => {
-        set((state) => ({
+        set(state => ({
           rooms: state.rooms.map(room =>
             room.id === roomId ? { ...room, unreadCount: count } : room
-          )
-        }))
+          ),
+        }));
       },
 
       setUserTyping: (userId, isTyping) => {
-        set((state) => {
-          const newTypingUsers = new Set(state.typingUsers)
+        set(state => {
+          const newTypingUsers = new Set(state.typingUsers);
           if (isTyping) {
-            newTypingUsers.add(userId)
+            newTypingUsers.add(userId);
           } else {
-            newTypingUsers.delete(userId)
+            newTypingUsers.delete(userId);
           }
-          return { typingUsers: newTypingUsers }
-        })
+          return { typingUsers: newTypingUsers };
+        });
       },
     }),
     { name: 'ChatStore' }
   )
-)
+);

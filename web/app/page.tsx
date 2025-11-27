@@ -7,7 +7,7 @@ import { motion } from 'motion/react';
 import Link from 'next/link';
 
 const Home = () => {
-  const theme = useThemeStore((state) => state.theme);
+  const theme = useThemeStore(state => state.theme);
 
   return (
     <div className={`min-h-screen bg-linear-to-br ${theme.bg}`}>

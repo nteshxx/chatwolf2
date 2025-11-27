@@ -8,36 +8,45 @@ import { useAuthStore } from '@/store/auth.store';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, isLoading, error, clearError, pendingVerificationEmail } = useAuthStore()
-  const {theme} = useThemeStore();
-  
+  const { login, isLoading, error, clearError, pendingVerificationEmail } =
+    useAuthStore();
+  const { theme } = useThemeStore();
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-  })
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    clearError()
+    e.preventDefault();
+    clearError();
 
     try {
-      await login(formData.email, formData.password)
-      
+      await login(formData.email, formData.password);
+
       if (pendingVerificationEmail) {
-        router.push('/verify-email')
+        router.push('/verify-email');
       } else {
-        router.push('/chat')
+        router.push('/chat');
       }
     } catch (error) {
-      console.error('Login error:', error)
+      console.error('Login error:', error);
     }
-  }
+  };
 
   return (
-    <div className={`rounded-2xl ${theme.glass} ${theme.textPrimary} space-y-6 p-8`}>
+    <div
+      className={`rounded-2xl ${theme.glass} ${theme.textPrimary} space-y-6 p-8`}
+    >
       <div>
-        <h2 className={`bg-linear-to-r ${theme.primary} bg-clip-text text-3xl font-bold text-transparent mb-2`}>Your Pack Awaits</h2>
-        <p className={`${theme.textSecondary} text-sm`}>Sign in to continue to ChatWolf</p>
+        <h2
+          className={`bg-linear-to-r ${theme.primary} bg-clip-text text-3xl font-bold text-transparent mb-2`}
+        >
+          Your Pack Awaits
+        </h2>
+        <p className={`${theme.textSecondary} text-sm`}>
+          Sign in to continue to ChatWolf
+        </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -62,7 +71,7 @@ export default function LoginPage() {
             onChange={e => setFormData({ ...formData, email: e.target.value })}
             className={`w-full rounded-lg px-4 py-2.5 outline-none transition-all ${theme.input}`}
             placeholder="you@example.com"
-            autoComplete='off'
+            autoComplete="off"
           />
         </div>
 
@@ -83,7 +92,7 @@ export default function LoginPage() {
             }
             className={`w-full rounded-lg px-4 py-2.5 outline-none transition-all ${theme.input}`}
             placeholder="••••••••"
-            autoComplete='off'
+            autoComplete="off"
           />
         </div>
 

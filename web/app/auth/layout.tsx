@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { useThemeStore } from '@/store/theme.store';
 import Image from 'next/image';
@@ -11,7 +11,9 @@ export default function AuthLayout({
   const { theme } = useThemeStore();
 
   return (
-    <div className={`min-h-screen bg-linear-to-br ${theme.bg} ${theme.textPrimary} flex`}>
+    <div
+      className={`min-h-screen bg-linear-to-br ${theme.bg} ${theme.textPrimary} flex`}
+    >
       {/* Left Side - Branding */}
       <div className="hidden lg:flex lg:w-1/2 items-center justify-center p-12">
         <div className="text-center">

@@ -10,17 +10,17 @@ export default function RegisterPage() {
   const router = useRouter();
   const { register, isLoading, error, setError, clearError } = useAuthStore();
   const { theme } = useThemeStore();
-  
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
     confirmPassword: '',
-  })
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    clearError()
+    e.preventDefault();
+    clearError();
 
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
@@ -28,19 +28,26 @@ export default function RegisterPage() {
     }
 
     try {
-      await register(formData.name, formData.email, formData.password)
-      router.push('/verify-email')
-
+      await register(formData.name, formData.email, formData.password);
+      router.push('/verify-email');
     } catch (error) {
-      console.error('Registration error:', error)
+      console.error('Registration error:', error);
     }
-  }
+  };
 
   return (
-    <div className={`rounded-2xl ${theme.glass} ${theme.textPrimary} space-y-6 p-8`}>
+    <div
+      className={`rounded-2xl ${theme.glass} ${theme.textPrimary} space-y-6 p-8`}
+    >
       <div>
-        <h2 className={`bg-linear-to-r ${theme.primary} bg-clip-text text-3xl font-bold text-transparent mb-2`}>Join The Pack</h2>
-        <p className={`${theme.textSecondary} text-sm`}>Sign up to get started with ChatWolf</p>
+        <h2
+          className={`bg-linear-to-r ${theme.primary} bg-clip-text text-3xl font-bold text-transparent mb-2`}
+        >
+          Join The Pack
+        </h2>
+        <p className={`${theme.textSecondary} text-sm`}>
+          Sign up to get started with ChatWolf
+        </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -65,7 +72,7 @@ export default function RegisterPage() {
             onChange={e => setFormData({ ...formData, name: e.target.value })}
             className={`w-full rounded-lg px-4 py-2.5 outline-none transition-all ${theme.input}`}
             placeholder="John Doe"
-            autoComplete='off'
+            autoComplete="off"
           />
         </div>
 
@@ -84,7 +91,7 @@ export default function RegisterPage() {
             onChange={e => setFormData({ ...formData, email: e.target.value })}
             className={`w-full rounded-lg px-4 py-2.5 outline-none transition-all ${theme.input}`}
             placeholder="you@example.com"
-            autoComplete='off'
+            autoComplete="off"
           />
         </div>
 
@@ -106,7 +113,7 @@ export default function RegisterPage() {
             }
             className={`w-full rounded-lg px-4 py-2.5 outline-none transition-all ${theme.input}`}
             placeholder="••••••••"
-            autoComplete='off'
+            autoComplete="off"
           />
         </div>
 
@@ -128,7 +135,7 @@ export default function RegisterPage() {
             }
             className={`w-full rounded-lg px-4 py-2.5 mb-3 outline-none transition-all ${theme.input}`}
             placeholder="••••••••"
-            autoComplete='off'
+            autoComplete="off"
           />
         </div>
 

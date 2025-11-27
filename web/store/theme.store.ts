@@ -1,17 +1,17 @@
-import { ThemeState } from '@/interfaces/theme-state'
-import { themes } from '@/theme/themes'
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { ThemeState } from '@/interfaces/theme-state';
+import { themes } from '@/theme/themes';
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 export const useThemeStore = create<ThemeState>()(
   persist(
-    (set) => ({
+    set => ({
       themeId: 'night',
       theme: themes.night,
-      setTheme: (id) => set({ themeId: id, theme: themes[id] }),
+      setTheme: id => set({ themeId: id, theme: themes[id] }),
     }),
     {
       name: 'theme-storage',
     }
   )
-)
+);
