@@ -6,6 +6,7 @@ import { Theme } from '@/types/theme.type';
 export default function ThemesPage() {
   const { themeId, theme, setTheme } = useThemeStore();
   const foo[];
+  var a;
   
   return (
     <div
