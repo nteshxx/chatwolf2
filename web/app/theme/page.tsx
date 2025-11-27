@@ -5,7 +5,8 @@ import { Theme } from '@/types/theme.type';
 
 export default function ThemesPage() {
   const { themeId, theme, setTheme } = useThemeStore();
-
+  const foo[];
+  
   return (
     <div
       className={`min-h-screen bg-linear-to-br ${theme.bg} ${theme.textPrimary}`}
@@ -30,7 +31,7 @@ export default function ThemesPage() {
                 themeId === id ? theme.button.primary : theme.button.secondary
               }`}
             >
-              {themes[id].name
+              {themes[id].name}
             </button>
           ))}
         </section>
