@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
+import { useThemeStore } from '@/store/theme.store';
 
 export default function VerifyEmailForm() {
   const router = useRouter();
@@ -14,6 +15,7 @@ export default function VerifyEmailForm() {
     clearError,
     pendingVerificationEmail,
   } = useAuthStore();
+  const { theme } = useThemeStore();
 
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [resendTimer, setResendTimer] = useState(60);
@@ -70,7 +72,7 @@ export default function VerifyEmailForm() {
 
     try {
       await verifyEmail(pendingVerificationEmail!, otpString);
-      router.push('/chat');
+      router.push('/dashboard');
     } catch (error) {
       console.error('Verification error:', error);
     }
@@ -90,14 +92,23 @@ export default function VerifyEmailForm() {
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-2">Verify Your Email</h2>
-      <p className="text-gray-600 mb-6">
-        We sent a code to <strong>{pendingVerificationEmail}</strong>
+    <div
+      className={`rounded-2xl ${theme.glass} ${theme.textPrimary} space-y-6 p-8`}
+    >
+      <h2
+        className={`bg-linear-to-r ${theme.primary} bg-clip-text text-3xl font-bold text-transparent mb-2`}
+      >
+        Verify Your Email
+      </h2>
+      <p className={`${theme.textSecondary} text-sm mb-6`}>
+        We sent a code to{' '}
+        <strong className={`${theme.textPrimary} tracking-wide`}>
+          {pendingVerificationEmail}
+        </strong>
       </p>
 
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        <div className="bg-red-500/10 border border-red-500 text-red-500 px-4 py-3 rounded mb-4">
           {error}
         </div>
       )}
@@ -114,7 +125,7 @@ export default function VerifyEmailForm() {
               value={digit}
               onChange={e => handleOtpChange(index, e.target.value)}
               onKeyDown={e => handleKeyDown(index, e)}
-              className="w-12 h-12 text-center text-xl border-2 rounded-md focus:border-blue-500"
+              className={`w-12 h-12 text-center text-xl border-2 rounded-md outline-none transition-all ${theme.input}`}
               required
             />
           ))}
@@ -123,7 +134,7 @@ export default function VerifyEmailForm() {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 disabled:bg-gray-400"
+          className={`w-full py-3 font-medium rounded-lg px-6 text-sm ${theme.button.primary} cursor-pointer`}
         >
           {isLoading ? 'Verifying...' : 'Verify Email'}
         </button>
@@ -134,12 +145,15 @@ export default function VerifyEmailForm() {
           <button
             onClick={handleResend}
             disabled={isLoading}
-            className="text-blue-600 hover:underline"
+            className={`text-base font-medium ${theme.textPrimary} cursor-pointer hover:underline`}
           >
             Resend Code
           </button>
         ) : (
-          <span className="text-gray-500">Resend code in {resendTimer}s</span>
+          <span className={`${theme.textSecondary}`}>
+            Resend code in{' '}
+            <strong className={`${theme.textPrimary}`}>{resendTimer}s</strong>
+          </span>
         )}
       </div>
     </div>
