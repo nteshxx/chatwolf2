@@ -30,7 +30,7 @@ export default function ThemesPage() {
                 themeId === id ? theme.button.primary : theme.button.secondary
               }`}
             >
-              {themes[id].name}
+              {themes[id].name
             </button>
           ))}
         </section>
