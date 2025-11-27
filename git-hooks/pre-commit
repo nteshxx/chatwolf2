@@ -33,9 +33,6 @@ for service in $SERVICES; do
     fi
   fi
 
-  # --------------------
-  # JS/TS (lint-staged)
-  # --------------------
   if [ -f "$service/package.json" ]; then
     (cd "$service" && npx lint-staged)
     if [[ $? -ne 0 ]]; then
