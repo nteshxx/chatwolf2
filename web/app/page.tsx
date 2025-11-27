@@ -1,7 +1,7 @@
-'use client'
+'use client';
 
 import { useThemeStore } from '@/store/theme.store';
-import Logo from '@/theme/logo';
+import { FloatingLogo } from '@/theme/logo';
 import ThemeToggle from '@/theme/toggle';
 import { motion } from 'motion/react';
 import Link from 'next/link';
@@ -56,7 +56,7 @@ const Home = () => {
          max-[992px]:col-start-1 max-[992px]:row-start-1
          max-[280px]:p-4"
         >
-          <Logo width={300} height={300} />
+          <FloatingLogo width={300} height={300} />
         </div>
       </div>
     </div>

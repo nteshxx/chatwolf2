@@ -1,6 +1,7 @@
 'use client';
 
 import { useThemeStore } from '@/store/theme.store';
+import Logo from '@/theme/logo';
 import Image from 'next/image';
 
 export default function AuthLayout({
@@ -17,13 +18,7 @@ export default function AuthLayout({
       {/* Left Side - Branding */}
       <div className="hidden lg:flex lg:w-1/2 items-center justify-center p-12">
         <div className="text-center">
-          <Image
-            src="/icons/logo.svg"
-            alt="ChatWolf Logo"
-            width={200}
-            height={200}
-            className="mx-auto mb-8"
-          />
+          <Logo height={200} width={200} className="mx-auto mb-8" />
           <h1 className="text-4xl font-bold mb-4">ChatWolf</h1>
           <p className={`${theme.textSecondary} text-lg`}>
             The Untamed Network
@@ -43,7 +38,9 @@ export default function AuthLayout({
               height={80}
               className="mx-auto mb-4"
             />
-            <h2 className="text-2xl font-bold">ChatWolf</h2>
+            <h2 className={`text-2xl font-bold ${theme.textPrimary}`}>
+              ChatWolf
+            </h2>
           </div>
 
           {children}
