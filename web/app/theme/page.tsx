@@ -1,12 +1,11 @@
-'use client';
+'use client'
+
 import { useThemeStore } from '@/store/theme.store';
 import { themes } from '@/theme/themes';
 import { Theme } from '@/types/theme.type';
 
 export default function ThemesPage() {
   const { themeId, theme, setTheme } = useThemeStore();
-  const foo[]; 
-  var a;
   
   return (
     <div

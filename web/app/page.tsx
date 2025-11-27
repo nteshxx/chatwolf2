@@ -1,4 +1,4 @@
-'use client';
+'use client'
 
 import { useThemeStore } from '@/store/theme.store';
 import Logo from '@/theme/logo';

@@ -8,12 +8,11 @@
     "start": "next start -p 4000",
     "lint": "eslint",
     "format": "prettier --write .",
-    "check": "prettier --check .",
-    "prepare": "husky"
+    "format:check": "prettier --check ."
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
-      "eslint",
+      "eslint --fix",
       "prettier --write"
     ],
     "*.{json,css,scss,md}": [
@@ -34,7 +33,6 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.0.3",
-    "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
     "prettier": "^3.6.2",
     "tailwindcss": "^4",
