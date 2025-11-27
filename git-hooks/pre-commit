@@ -1,55 +1,61 @@
 #!/bin/bash
-
-echo "🔍 Detecting changed services..."
-
 FILES=$(git diff --cached --name-only)
 
 if [ -z "$FILES" ]; then
   exit 0
 fi
 
-# Extract unique service directories
+# Track whether any service fails
+HAS_ERRORS=0
+
+# Extract unique top-level directories
 SERVICES=$(echo "$FILES" | awk -F/ '{print $1}' | sort -u)
 
 for service in $SERVICES; do
-  echo ""
-  echo "➡️ Processing $service"
 
   if [ ! -d "$service" ]; then
-    echo "Skipping: not a directory"
     continue
   fi
 
-  # Java (Spotless)
   if [ -f "$service/build.gradle" ] || [ -f "$service/pom.xml" ]; then
-    echo "🟡 Java service → spotlessApply"
     (cd "$service" && ./gradlew spotlessApply)
+    if [[ $? -ne 0 ]]; then
+      echo "❌ Spotless failed in $service"
+      HAS_ERRORS=1
+    fi
   fi
 
-  # Go
   if [ -f "$service/go.mod" ]; then
-    echo "🔵 Go service → fmt + vet"
     (cd "$service" && go fmt ./... && go vet ./...)
+    if [[ $? -ne 0 ]]; then
+      echo "❌ Go fmt/vet failed in $service"
+      HAS_ERRORS=1
+    fi
   fi
 
-  # JS/TS/Next.js
+  # --------------------
+  # JS/TS (lint-staged)
+  # --------------------
   if [ -f "$service/package.json" ]; then
-    echo "🟣 JS/TS service → lint-staged"
     (cd "$service" && npx lint-staged)
+    if [[ $? -ne 0 ]]; then
+      echo "❌ lint-staged failed in $service"
+      HAS_ERRORS=1
+    fi
   fi
 
-  # -----------------------------------------
-  # 🧠 ONLY re-stage modified files in service
-  # -----------------------------------------
-  echo "♻️  Re-staging modified files inside: $service"
   MODIFIED=$(git ls-files -m "$service")
 
   if [ -n "$MODIFIED" ]; then
     echo "$MODIFIED" | xargs git add
-  else
-    echo "No files to re-stage."
   fi
 
 done
 
+if [[ $HAS_ERRORS -eq 1 ]]; then
+  echo "❌ Pre-commit checks failed. Commit aborted."
+  exit 1
+fi
+
+echo "✅ All checks passed."
 exit 0
