@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
 import { useThemeStore } from '@/store/theme.store';
 
-export default function VerifyEmailForm() {
+export default function VerifyEmailPage() {
   const router = useRouter();
   const {
     verifyEmail,
