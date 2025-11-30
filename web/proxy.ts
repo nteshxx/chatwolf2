@@ -5,7 +5,7 @@ export function proxy(request: NextRequest) {
   const token = request.cookies.get('auth-storage')?.value;
 
   const isAuthPage = request.nextUrl.pathname.startsWith('/auth');
-  const isProtectedPage = request.nextUrl.pathname.startsWith('/dasboard')
+  const isProtectedPage = request.nextUrl.pathname.startsWith('/dasboard');
 
   // Redirect to login if accessing protected route without token
   if (isProtectedPage && !token) {
@@ -21,8 +21,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    '/auth/:path*',
-    '/dasboard/:path*',
-  ],
+  matcher: ['/auth/:path*', '/dasboard/:path*'],
 };
