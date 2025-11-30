@@ -36,6 +36,7 @@
     "eslint-config-next": "16.0.3",
     "lint-staged": "^16.2.7",
     "prettier": "^3.6.2",
+    "tailwind-scrollbar": "^4.0.2",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

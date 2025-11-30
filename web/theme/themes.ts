@@ -20,6 +20,10 @@ export const themes = {
     // Loader
     loader: 'border-slate-400',
 
+    // Scroll Bar
+    scrollbar:
+      'scrollbar-thin scrollbar-thumb-slate-400/30 scrollbar-track-transparent hover:scrollbar-thumb-slate-400/50 scrollbar-thumb-rounded-full',
+
     // Borders
     border: 'border-slate-800',
     borderHover: 'hover:border-slate-700',
@@ -74,6 +78,10 @@ export const themes = {
 
     // Loader
     loader: 'border-purple-300',
+
+    // Scroll Bar
+    scrollbar:
+      'scrollbar-thin scrollbar-thumb-purple-400/30 scrollbar-track-transparent hover:scrollbar-thumb-purple-400/50 scrollbar-thumb-rounded-full',
 
     // Borders
     border: 'border-purple-800',
@@ -130,6 +138,10 @@ export const themes = {
     // Loader
     loader: 'border-amber-300',
 
+    // Scroll Bar
+    scrollbar:
+      'scrollbar-thin scrollbar-thumb-amber-400/30 scrollbar-track-transparent hover:scrollbar-thumb-amber-400/50 scrollbar-thumb-rounded-full',
+
     // Borders
     border: 'border-rose-800',
     borderHover: 'hover:border-rose-700',
@@ -184,6 +196,10 @@ export const themes = {
 
     // Loader
     loader: 'border-slate-600',
+
+    // Scroll Bar
+    scrollbar:
+      'scrollbar-thin scrollbar-thumb-slate-300/40 scrollbar-track-slate-100/20 hover:scrollbar-thumb-slate-400/60 scrollbar-thumb-rounded-full',
 
     // Borders
     border: 'border-slate-200',

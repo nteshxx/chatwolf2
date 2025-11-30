@@ -1,7 +1,7 @@
 'use client';
 
 import { Search } from '@/components/chat/Search';
-import { Conversations } from '@/components/chat/Conversations';
+import { Chats } from '@/components/chat/Chats';
 import { ChatBox } from '@/components/chat/ChatBox';
 import { useThemeStore } from '@/store/theme.store';
 
@@ -10,11 +10,12 @@ export default function ChatPage() {
 
   return (
     <>
-      <div className="pr-4 w-96">
+      <div className="w-96 flex flex-col shrink-0">
         <Search />
-        <Conversations />
+        <div className={`m-4 h-px ${theme.border} border-t`} />
+        <Chats />
       </div>
-      <div className="w-3xl">
+      <div className="flex-1 overflow-hidden">
         <ChatBox />
       </div>
     </>
