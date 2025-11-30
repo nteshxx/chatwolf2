@@ -23,7 +23,7 @@ const Profile = () => {
   };
 
   return (
-    <div className={`rounded-xl ${theme.bgCard} ${theme.border} border p-4`}>
+    <div className={`rounded-xl ${theme.border} border p-4`}>
       <div
         className="w-20 h-20 rounded-full m-auto overflow-hidden"
         onClick={onUpdateAvatar}
