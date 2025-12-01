@@ -1,22 +1,14 @@
 'use client';
 
+import { Chat } from '@/interfaces/chat';
 import { useThemeStore } from '@/store/theme.store';
 import { useState } from 'react';
-
-interface Conversation {
-  id: string;
-  name: string;
-  lastMessage: string;
-  timestamp: string;
-  unread: number;
-  online: boolean;
-}
 
 export function Chats() {
   const { theme } = useThemeStore();
   const [selectedId, setSelectedId] = useState<string | null>('1');
 
-  const conversations: Conversation[] = [
+  const conversations: Chat[] = [
     {
       id: '1',
       name: 'Alice Smith',
@@ -84,7 +76,9 @@ export function Chats() {
   ];
 
   return (
-    <div className={`flex-1 px-4 space-y-4 overflow-y-auto ${theme.scrollbar}`}>
+    <div
+      className={`flex-1 mx-4 px-4 space-y-4 overflow-y-auto ${theme.scrollbar}`}
+    >
       {conversations.map(conv => (
         <div
           key={conv.id}

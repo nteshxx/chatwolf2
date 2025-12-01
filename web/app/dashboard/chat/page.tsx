@@ -2,7 +2,7 @@
 
 import { Search } from '@/components/chat/Search';
 import { Chats } from '@/components/chat/Chats';
-import { ChatBox } from '@/components/chat/ChatBox';
+import { ChatWindow } from '@/components/chat/ChatWindow';
 import { useThemeStore } from '@/store/theme.store';
 
 export default function ChatPage() {
@@ -16,7 +16,7 @@ export default function ChatPage() {
         <Chats />
       </div>
       <div className="flex-1 overflow-hidden">
-        <ChatBox />
+        <ChatWindow />
       </div>
     </>
   );
