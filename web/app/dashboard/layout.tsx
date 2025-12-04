@@ -15,8 +15,7 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const { theme } = useThemeStore();
-  // const { isAuthenticated } = useAuthStore()
-  const isAuthenticated = true; // TODO: Replace with actual auth
+  const { isAuthenticated } = useAuthStore();
 
   useEffect(() => {
     // Check authentication on mount

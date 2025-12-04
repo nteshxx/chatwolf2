@@ -9,7 +9,7 @@ export function proxy(request: NextRequest) {
 
   // Redirect to login if accessing protected route without token
   if (isProtectedPage && !token) {
-    //return NextResponse.redirect(new URL('/auth/login', request.url));
+    return NextResponse.redirect(new URL('/auth/login', request.url));
   }
 
   // Redirect to chat if already logged in and trying to access auth pages
