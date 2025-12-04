@@ -1,6 +1,5 @@
 import { Message } from '@/interfaces/message';
 import { useThemeStore } from '@/store/theme.store';
-import { memo } from 'react';
 
 export function MessageBubble({
   message,
@@ -18,15 +17,19 @@ export function MessageBubble({
           isOwn ? `bg-linear-to-r ${theme.primary}` : theme.glass
         }`}
       >
-        <div className="flex items-end gap-2">
-          <p className={`text-sm ${theme.textPrimary}`}>{message.text}</p>
-          <div className="flex items-center gap-1 shrink-0">
-            <span
-              className={`text-xs ${isOwn ? theme.textPrimary : theme.textMuted} leading-none`}
-            >
-              {message.timestamp}
-            </span>
-          </div>
+        <div className="inline">
+          <span
+            className={`text-base ${isOwn ? 'text-white' : theme.textPrimary}`}
+          >
+            {message.text}
+          </span>
+          <span
+            className={`float-right ml-1 mt-2 text-xs ${
+              isOwn ? 'text-white' : theme.textSecondary
+            } whitespace-nowrap leading-none`}
+          >
+            {message.timestamp}
+          </span>
         </div>
       </div>
     </div>

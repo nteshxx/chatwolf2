@@ -2,6 +2,7 @@ import { Message } from '@/interfaces/message';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { MessageBubble } from './MessageBubble';
 import { useThemeStore } from '@/store/theme.store';
+import { PaperClipIcon } from '@heroicons/react/24/solid';
 
 export function ChatWindow() {
   const { theme } = useThemeStore();
@@ -124,7 +125,7 @@ export function ChatWindow() {
       <div className="mb-4 shrink-0">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <div className="h-12 w-12 rounded-full bg-linear-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold text-lg shadow-lg shadow-purple-500/50">
+            <div className="h-12 w-12 rounded-full bg-linear-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold text-lg">
               AS
             </div>
           </div>
@@ -189,22 +190,10 @@ export function ChatWindow() {
                 // Handle attachment click
                 console.log('Attachment button clicked');
               }}
-              className={`rounded-full p-2 text-sm font-medium ${theme.glass} ${theme.glassHover} cursor-pointer`}
+              className={`rounded-full p-2 text-sm font-medium ${theme.input} transition-all ${theme.button.ghost} cursor-pointer`}
               title="Attach file"
             >
-              <svg
-                className="w-5 h-5 text-gray-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
-                />
-              </svg>
+              <PaperClipIcon className="size-5" />
             </button>
             <input
               ref={inputRef}
@@ -227,7 +216,7 @@ export function ChatWindow() {
 
           {/* Character count */}
           {messageInput.length > 900 && (
-            <div className="text-xs text-gray-400 text-right mt-1">
+            <div className={`text-xs ${theme.textSecondary} text-right mt-1`}>
               {messageInput.length}/1000
             </div>
           )}
