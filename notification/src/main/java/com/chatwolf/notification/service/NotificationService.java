@@ -4,8 +4,6 @@ import com.chatwolf.notification.dto.NotificationEvent;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -13,8 +11,9 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class NotificationService {
 
-    private final JavaMailSender mailSender;
     private final MeterRegistry meterRegistry;
+    private final EmailService emailService;
+    private final SmsService smsService;
 
     public void process(NotificationEvent ev) {
         meterRegistry
@@ -24,32 +23,15 @@ public class NotificationService {
                         ev.getType().toString().toUpperCase())
                 .increment();
         switch (ev.getType()) {
-            case EMAIL -> sendEmail(ev);
-            case SMS -> sendSms(ev);
+            case REGISTRATION_OTP_EMAIL -> emailService.sendRegistrationOtp(
+                    ev.getRecipient(), ev.getUsername(), ev.getOtp());
+            case PASSWORD_RESET_OTP_EMAIL -> emailService.sendPasswordResetOtp(
+                    ev.getRecipient(), ev.getUsername(), ev.getOtp());
+            case LOGIN_OTP_SMS -> smsService.sendSmsLoginOtp(ev);
             default -> {
                 log.warn("Unknown notification type: {}", ev.getType());
                 meterRegistry.counter("notifications.unknown").increment();
             }
         }
-    }
-
-    private void sendEmail(NotificationEvent ev) {
-        try {
-            SimpleMailMessage msg = new SimpleMailMessage();
-            msg.setTo(ev.getRecipient());
-            msg.setSubject(ev.getSubject());
-            msg.setText(ev.getBody());
-            mailSender.send(msg);
-            meterRegistry.counter("notifications.sent", "type", "EMAIL").increment();
-        } catch (Exception ex) {
-            meterRegistry.counter("notifications.failed", "type", "EMAIL").increment();
-            throw ex;
-        }
-    }
-
-    private void sendSms(NotificationEvent ev) {
-        // integrate sms client here; for now log
-        log.info("sendSms to {}: {}", ev.getRecipient(), ev.getBody());
-        meterRegistry.counter("notifications.sent", "type", "SMS").increment();
     }
 }

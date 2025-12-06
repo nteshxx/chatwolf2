@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify Your Email</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+  <table role="presentation" style="width: 100%; border-collapse: collapse;">
+    <tr>
+      <td align="center" style="padding: 40px 0;">
+        <table role="presentation" style="width: 600px; border-collapse: collapse; background: white; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden;">
+          <!-- Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px; text-align: center;">
+              <div style="background: white; width: 80px; height: 80px; margin: 0 auto 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 16px rgba(0,0,0,0.2);">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#667eea" stroke-width="2">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                  <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
+              </div>
+              <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 700;">Welcome Aboard! 🎉</h1>
+            </td>
+          </tr>
+          
+          <!-- Body -->
+          <tr>
+            <td style="padding: 40px 40px 20px;">
+              <h2 style="color: #1a202c; margin: 0 0 16px; font-size: 24px;">Hi {{USER_NAME}},</h2>
+              <p style="color: #4a5568; line-height: 1.6; margin: 0 0 24px; font-size: 16px;">
+                Thank you for signing up! To complete your registration and start exploring, please verify your email address using the code below:
+              </p>
+              
+              <!-- OTP Box -->
+              <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 30px; text-align: center; margin: 30px 0;">
+                <p style="color: rgba(255,255,255,0.9); margin: 0 0 12px; font-size: 14px; text-transform: uppercase; letter-spacing: 2px; font-weight: 600;">Your Verification Code</p>
+                <div style="background: white; border-radius: 8px; padding: 20px; display: inline-block; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                  <p style="margin: 0; font-size: 36px; font-weight: 700; letter-spacing: 8px; color: #667eea;">{{OTP_CODE}}</p>
+                </div>
+              </div>
+              
+              <p style="color: #718096; font-size: 14px; margin: 24px 0; text-align: center;">
+                This code will expire in <strong style="color: #667eea;">{{EXPIRY_TIME}} minutes</strong>
+              </p>
+              
+              <div style="background: #f7fafc; border-left: 4px solid #667eea; padding: 16px; border-radius: 4px; margin: 24px 0;">
+                <p style="color: #4a5568; margin: 0; font-size: 14px;">
+                  <strong>Security Tip:</strong> Never share this code with anyone. Our team will never ask for your verification code.
+                </p>
+              </div>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="background: #f7fafc; padding: 30px; text-align: center; border-top: 1px solid #e2e8f0;">
+              <p style="color: #718096; font-size: 14px; margin: 0 0 8px;">
+                Didn't request this? You can safely ignore this email.
+              </p>
+              <p style="color: #a0aec0; font-size: 12px; margin: 0;">
+                © {{CURRENT_YEAR}} Your Company. All rights reserved.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
