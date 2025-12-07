@@ -33,4 +33,8 @@ public class Register {
 
     @Enumerated(EnumType.STRING)
     private List<Role> roles;
+
+    private String ip;
+    private String userAgent;
+    private String otpCode;
 }

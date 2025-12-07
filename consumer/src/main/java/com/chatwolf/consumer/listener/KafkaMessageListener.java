@@ -1,5 +1,6 @@
 package com.chatwolf.consumer.listener;
 
+import com.chatwolf.consumer.constant.Constants;
 import com.chatwolf.consumer.dto.ChatMessageEvent;
 import com.chatwolf.consumer.entity.Message;
 import com.chatwolf.consumer.exception.NonRecoverableException;
@@ -44,27 +45,27 @@ public class KafkaMessageListener {
     public void initMetrics() {
         messagesProcessed = Counter.builder("kafka.messages.processed")
                 .description("Total messages successfully processed")
-                .tag("topic", "chat-messages")
+                .tag("topic", Constants.KAFKA_CHAT_MESSAGES_TOPIC)
                 .register(meterRegistry);
 
         messagesFailed = Counter.builder("kafka.messages.failed")
                 .description("Total messages failed to process")
-                .tag("topic", "chat-messages")
+                .tag("topic", Constants.KAFKA_CHAT_MESSAGES_TOPIC)
                 .register(meterRegistry);
 
         duplicateMessages = Counter.builder("kafka.messages.duplicate")
                 .description("Total duplicate messages detected")
-                .tag("topic", "chat-messages")
+                .tag("topic", Constants.KAFKA_CHAT_MESSAGES_TOPIC)
                 .register(meterRegistry);
 
         messageProcessingTimer = Timer.builder("kafka.message.processing.time")
                 .description("Message processing time")
-                .tag("topic", "chat-messages")
+                .tag("topic", Constants.KAFKA_CHAT_MESSAGES_TOPIC)
                 .register(meterRegistry);
     }
 
     @KafkaListener(
-            topics = "${kafka.topic.chat-messages:chat-messages}",
+            topics = Constants.KAFKA_CHAT_MESSAGES_TOPIC,
             groupId = "${spring.kafka.consumer.group-id}",
             containerFactory = "kafkaListenerContainerFactory",
             concurrency = "${kafka.consumer.concurrency:3}")
@@ -132,7 +133,7 @@ public class KafkaMessageListener {
 
     private ChatMessageEvent deserializeMessage(String payload) {
         try {
-            if (payload == null || payload.trim().isEmpty()) {
+            if (payload == null || payload.isBlank()) {
                 throw new NonRecoverableException("Empty or null message payload");
             }
 

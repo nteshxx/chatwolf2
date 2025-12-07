@@ -1,9 +1,6 @@
-package com.chatwolf.consumer.config;
+package com.chatwolf.notification.config;
 
-import com.chatwolf.consumer.constant.Constants;
-import com.chatwolf.consumer.exception.DeserializationException;
-import com.chatwolf.consumer.exception.NonRecoverableException;
-import com.fasterxml.jackson.core.JsonParseException;
+import com.chatwolf.notification.constant.Constants;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.HashMap;
@@ -11,21 +8,16 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.listener.ContainerProperties;
-import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
-import org.springframework.kafka.listener.DefaultErrorHandler;
-import org.springframework.kafka.support.ExponentialBackOffWithMaxRetries;
 
 @Slf4j
 @Configuration
@@ -76,45 +68,7 @@ public class KafkaConsumerConfig {
         factory.setConsumerFactory(consumerFactory);
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
         factory.getContainerProperties().setShutdownTimeout(30000L);
-        factory.setCommonErrorHandler(errorHandler(kafkaTemplate));
         return factory;
-    }
-
-    @Bean
-    DefaultErrorHandler errorHandler(KafkaTemplate<String, String> kafkaTemplate) {
-
-        DeadLetterPublishingRecoverer recoverer = new DeadLetterPublishingRecoverer(kafkaTemplate, (record, ex) -> {
-            String originalTopic = record.topic();
-            return new TopicPartition(originalTopic + "-dead-letter", record.partition());
-        });
-
-        ExponentialBackOffWithMaxRetries backOff = new ExponentialBackOffWithMaxRetries(5);
-        backOff.setInitialInterval(1000L);
-        backOff.setMultiplier(5.0);
-        backOff.setMaxInterval(660000L);
-
-        DefaultErrorHandler errorHandler = new DefaultErrorHandler(recoverer, backOff);
-
-        errorHandler.addNotRetryableExceptions(
-                NonRecoverableException.class,
-                DeserializationException.class,
-                JsonParseException.class,
-                IllegalArgumentException.class,
-                NullPointerException.class,
-                DataIntegrityViolationException.class);
-
-        errorHandler.setRetryListeners((record, ex, deliveryAttempt) -> {
-            if (deliveryAttempt == 5) {
-                log.error(
-                        "Failed after {} retries: offset={}, partition={}",
-                        deliveryAttempt,
-                        record.offset(),
-                        record.partition(),
-                        ex);
-            }
-        });
-
-        return errorHandler;
     }
 
     @Bean
@@ -127,16 +81,8 @@ public class KafkaConsumerConfig {
     }
 
     @Bean
-    NewTopic chatMessagesTopic() {
-        return TopicBuilder.name(Constants.KAFKA_CHAT_MESSAGES_TOPIC)
-                .partitions(3)
-                .replicas(1)
-                .build();
-    }
-
-    @Bean
-    NewTopic chatMessagesDeadLetterTopic() {
-        return TopicBuilder.name("chat-messages-dead-letter")
+    NewTopic notificationEventsTopic() {
+        return TopicBuilder.name(Constants.KAFKA_NOTIFICATION_EVENTS_TOPIC)
                 .partitions(3)
                 .replicas(1)
                 .build();

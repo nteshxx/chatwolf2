@@ -7,7 +7,9 @@ import com.chatwolf.auth.dto.Register;
 import com.chatwolf.auth.dto.Token;
 import com.chatwolf.auth.entity.User;
 import com.chatwolf.auth.service.AuthService;
+import com.chatwolf.auth.utility.RequestUtils;
 import com.chatwolf.auth.utility.ResponseBuilder;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.util.Map;
 import java.util.Optional;
@@ -39,9 +41,30 @@ public class AuthController {
     @Value("${jwt.refresh-token-expiration-days}")
     private Integer refreshTokenExpirationDays;
 
-    @PostMapping("/register")
-    public ResponseEntity<Object> signup(@Valid @RequestBody Register signupDetails) {
-        AuthRespone data = authService.register(signupDetails);
+    @PostMapping("/initiate-register")
+    public ResponseEntity<Object> initiateRegister(
+            HttpServletRequest httpRequest, @Valid @RequestBody Register registerDetails) {
+        String ip = RequestUtils.getClientIP(httpRequest);
+        String userAgent = RequestUtils.getUserAgent(httpRequest);
+        registerDetails.setIp(ip);
+        registerDetails.setUserAgent(userAgent);
+
+        Boolean isOtpSent = authService.initiateRegister(registerDetails);
+        if (isOtpSent) {
+            return ResponseBuilder.build(HttpStatus.CREATED, null, "otp sent to email", null);
+        }
+        return ResponseBuilder.build(HttpStatus.INTERNAL_SERVER_ERROR, null, "registration failed", null);
+    }
+
+    @PostMapping("/complete-register")
+    public ResponseEntity<Object> completeRegister(
+            HttpServletRequest httpRequest, @Valid @RequestBody Register registerDetails) {
+        String ip = RequestUtils.getClientIP(httpRequest);
+        String userAgent = RequestUtils.getUserAgent(httpRequest);
+        registerDetails.setIp(ip);
+        registerDetails.setUserAgent(userAgent);
+
+        AuthRespone data = authService.completeRegister(registerDetails);
         ResponseCookie cookie = ResponseCookie.from(
                         "REFRESHTOKEN", data.getToken().getRefreshToken())
                 .httpOnly(true)

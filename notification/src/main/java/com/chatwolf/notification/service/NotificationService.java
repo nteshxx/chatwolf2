@@ -15,21 +15,21 @@ public class NotificationService {
     private final EmailService emailService;
     private final SmsService smsService;
 
-    public void process(NotificationEvent ev) {
+    public void process(NotificationEvent event) {
         meterRegistry
                 .counter(
                         "notifications.received",
                         "type",
-                        ev.getType().toString().toUpperCase())
+                        event.getType().toString().toUpperCase())
                 .increment();
-        switch (ev.getType()) {
+        switch (event.getType()) {
             case REGISTRATION_OTP_EMAIL -> emailService.sendRegistrationOtp(
-                    ev.getRecipient(), ev.getUsername(), ev.getOtp());
+                    event.getRecipient(), event.getUsername(), event.getOtp());
             case PASSWORD_RESET_OTP_EMAIL -> emailService.sendPasswordResetOtp(
-                    ev.getRecipient(), ev.getUsername(), ev.getOtp());
-            case LOGIN_OTP_SMS -> smsService.sendSmsLoginOtp(ev);
+                    event.getRecipient(), event.getUsername(), event.getOtp());
+            case LOGIN_OTP_SMS -> smsService.sendSmsLoginOtp(event);
             default -> {
-                log.warn("Unknown notification type: {}", ev.getType());
+                log.warn("Unknown notification type: {}", event.getType());
                 meterRegistry.counter("notifications.unknown").increment();
             }
         }

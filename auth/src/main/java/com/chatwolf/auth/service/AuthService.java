@@ -1,9 +1,13 @@
 package com.chatwolf.auth.service;
 
+import com.chatwolf.auth.constant.Constants;
+import com.chatwolf.auth.constant.NotificationType;
+import com.chatwolf.auth.constant.OtpType;
 import com.chatwolf.auth.constant.Role;
 import com.chatwolf.auth.dto.AuthRespone;
 import com.chatwolf.auth.dto.ChangePassword;
 import com.chatwolf.auth.dto.Login;
+import com.chatwolf.auth.dto.NotificationEvent;
 import com.chatwolf.auth.dto.Register;
 import com.chatwolf.auth.dto.Token;
 import com.chatwolf.auth.entity.RefreshToken;
@@ -14,8 +18,8 @@ import com.chatwolf.auth.utility.TokenHasher;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
@@ -28,45 +32,82 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
+@RequiredArgsConstructor
 @Service
 public class AuthService {
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private RefreshTokenService refreshTokenService;
-
-    @Autowired
-    private JwtService jwtService;
-
-    @Autowired
-    private UserService userService;
+    private final AuthenticationManager authenticationManager;
+    private final PasswordEncoder passwordEncoder;
+    private final RefreshTokenService refreshTokenService;
+    private final JwtService jwtService;
+    private final UserService userService;
+    private final OtpService otpService;
+    private final KafkaProducerService kafkaProducerService;
 
     @Transactional
-    public AuthRespone register(Register signupDetails) {
-        Optional<User> existingUser = userService.checkIfUserExists(signupDetails.getEmail());
+    public Boolean initiateRegister(Register registerDetails) {
+        try {
+            Optional<User> existingUser = userService.checkIfUserExists(registerDetails.getEmail());
+            if (existingUser.isPresent()) {
+                throw new BadRequestException("email already registered");
+            }
+
+            // generate otp
+            String otpCode = otpService.generateOtp(
+                    registerDetails.getEmail(),
+                    OtpType.REGISTRATION,
+                    registerDetails.getIp(),
+                    registerDetails.getUserAgent());
+
+            // prepare email notification
+            NotificationEvent emailNotification = NotificationEvent.builder()
+                    .type(NotificationType.REGISTRATION_OTP_EMAIL)
+                    .recipient(registerDetails.getEmail())
+                    .username(registerDetails.getFirstName() + " " + registerDetails.getLastName())
+                    .otp(otpCode)
+                    .build();
+
+            // send otp on email
+            kafkaProducerService.sendMessage(Constants.KAFKA_NOTIFICATION_EVENTS_TOPIC, emailNotification);
+            return true;
+
+        } catch (Exception ex) {
+            log.error("Failed sending otp to mail for resgistering new user");
+            return false;
+        }
+    }
+
+    @Transactional
+    public AuthRespone completeRegister(Register registerDetails) {
+        Optional<User> existingUser = userService.checkIfUserExists(registerDetails.getEmail());
         if (existingUser.isPresent()) {
             throw new BadRequestException("email already registered");
         }
-        User user = User.builder()
-                .firstName(signupDetails.getFirstName())
-                .lastName(signupDetails.getLastName())
-                .email(signupDetails.getEmail())
-                .password(passwordEncoder.encode(signupDetails.getPassword()))
-                .roles(List.of(Role.USER))
-                .build();
-        userService.saveUser(user);
-        RefreshToken refreshToken = RefreshToken.builder().user(user).build();
-        refreshToken = refreshTokenService.saveRefreshToken(refreshToken); // save to get tokenId
-        String refreshTokenString = jwtService.generateRefreshToken(user, refreshToken);
-        String accessToken = jwtService.generateAccessToken(user);
-        refreshToken.setTokenHash(TokenHasher.hashToken(refreshTokenString));
-        refreshTokenService.saveRefreshToken(refreshToken); // update tokenHash in database
-        return new AuthRespone(user, new Token(accessToken, refreshTokenString));
+
+        if (otpService.validateOtp(
+                registerDetails.getEmail(),
+                registerDetails.getOtpCode(),
+                OtpType.REGISTRATION,
+                registerDetails.getIp(),
+                registerDetails.getUserAgent())) {
+            User user = User.builder()
+                    .firstName(registerDetails.getFirstName())
+                    .lastName(registerDetails.getLastName())
+                    .email(registerDetails.getEmail())
+                    .password(passwordEncoder.encode(registerDetails.getPassword()))
+                    .roles(List.of(Role.USER))
+                    .build();
+            userService.saveUser(user);
+            RefreshToken refreshToken = RefreshToken.builder().user(user).build();
+            refreshToken = refreshTokenService.saveRefreshToken(refreshToken); // save to get tokenId
+            String refreshTokenString = jwtService.generateRefreshToken(user, refreshToken);
+            String accessToken = jwtService.generateAccessToken(user);
+            refreshToken.setTokenHash(TokenHasher.hashToken(refreshTokenString));
+            refreshTokenService.saveRefreshToken(refreshToken); // update tokenHash in database
+            return new AuthRespone(user, new Token(accessToken, refreshTokenString));
+        } else {
+            throw new BadRequestException("invalid otp");
+        }
     }
 
     @Transactional
