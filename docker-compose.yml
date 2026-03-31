@@ -335,6 +335,32 @@ services:
     networks:
       - chatwolf-network
 
+  # Web Service
+  web:
+    build: ./web/
+    image: web:1.0.0
+    container_name: web
+    ports:
+      - "4000:4000"
+    environment:
+      NODE_ENV: production
+      SERVICE_NAME: web
+    depends_on:
+      - loki
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+    networks:
+      - chatwolf-network
+  
   # Loki - Log aggregation
   loki:
     image: grafana/loki:3.5
@@ -622,6 +648,7 @@ services:
     networks:
       - chatwolf-network
 
+  # MinIO Storage
   minio:
     image: minio/minio:RELEASE.2025-09-07T16-13-09Z
     container_name: minio

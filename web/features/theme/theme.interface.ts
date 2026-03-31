@@ -1,5 +1,5 @@
-import { themes } from '@/theme/themes';
-import { Theme } from '@/types/theme.type';
+import { themes } from '@/features/theme/themes';
+import { Theme } from '@/features/theme/theme.type';
 
 export interface ThemeState {
   themeId: Theme;

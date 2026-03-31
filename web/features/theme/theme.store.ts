@@ -1,5 +1,5 @@
-import { ThemeState } from '@/interfaces/theme-state';
-import { themes } from '@/theme/themes';
+import { ThemeState } from '@/features/theme/theme.interface';
+import { themes } from '@/features/theme/themes';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 

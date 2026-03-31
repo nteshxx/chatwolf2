@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
-import { useThemeStore } from '@/store/theme.store';
+import { useThemeStore } from '@/features/theme/theme.store';
 
 export default function VerifyEmailPage() {
   const router = useRouter();

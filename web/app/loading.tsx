@@ -1,6 +1,6 @@
 'use client';
 
-import { useThemeStore } from '@/store/theme.store';
+import { useThemeStore } from '@/features/theme/theme.store';
 import { motion } from 'framer-motion';
 
 export default function Loading() {

@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
-import { useThemeStore } from '@/store/theme.store';
+import { useThemeStore } from '@/features/theme/theme.store';
 import Navigation from '@/components/dashboard/Navigation';
 import Profile from '@/components/dashboard/Profile';
 import Footer from '@/components/dashboard/Footer';

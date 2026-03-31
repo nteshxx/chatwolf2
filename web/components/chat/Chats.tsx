@@ -1,7 +1,7 @@
 'use client';
 
 import { Chat } from '@/interfaces/chat';
-import { useThemeStore } from '@/store/theme.store';
+import { useThemeStore } from '@/features/theme/theme.store';
 import { useState } from 'react';
 
 export function Chats() {

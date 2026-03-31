@@ -1,7 +1,8 @@
 export interface Message {
   id: string;
-  sender: string;
-  text: string;
+  userId: string;
+  username: string;
+  content: string;
   timestamp: string;
   status?: 'sending' | 'sent' | 'failed';
 }

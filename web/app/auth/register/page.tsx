@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
-import { useThemeStore } from '@/store/theme.store';
+import { useThemeStore } from '@/features/theme/theme.store';
 
 export default function RegisterPage() {
   const router = useRouter();

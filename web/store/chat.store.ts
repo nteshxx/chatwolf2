@@ -73,7 +73,7 @@ export const useChatStore = create<ChatState>()(
           userId: 'current-user',
           username: 'You',
           content,
-          timestamp: Date.now(),
+          timestamp: Date.now().toString(),
           status: 'sending',
         };
 

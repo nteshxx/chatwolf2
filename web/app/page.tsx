@@ -1,55 +1,26 @@
 'use client';
 
-import { useThemeStore } from '@/store/theme.store';
-import { FloatingLogo } from '@/theme/logo';
-import ThemeToggle from '@/theme/toggle';
-import { motion } from 'motion/react';
-import Link from 'next/link';
+import { FloatingLogo } from '@/components/home/FloatingLogo';
+import ThemeToggle from '@/components/theme/ThemeToggle';
+import { LoginButton } from '@/components/home/LoginButton';
+import { Hero } from '@/components/home/Hero';
+import { useThemeStore } from '@/features/theme/theme.store';
 
 const Home = () => {
   const theme = useThemeStore(state => state.theme);
 
   return (
-    <div className={`min-h-screen bg-linear-to-br ${theme.bg}`}>
+    <div
+      className={`min-h-screen bg-linear-to-br ${theme['--color-background']}`}
+    >
       <ThemeToggle />
       <div className="grid grid-cols-2 h-screen max-w-5xl:grid-cols-1">
         <div
           className="flex flex-col justify-center items-start pl-48
             max-w-lg:px-12 max-w-lg:items-center max-w-sm:px-4"
         >
-          <motion.h1
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1 }}
-            className={`mb-2 text-2xl tracking-wide ${theme.textSecondary}`}
-          >
-            Realtime Messaging
-          </motion.h1>
-          <motion.p
-            variants={{
-              hidden: { opacity: 0, x: -10 },
-              visible: { opacity: 1, x: 0 },
-            }}
-            initial="hidden"
-            animate="visible"
-            transition={{ duration: 1 }}
-            className={`my-12 text-6xl leading-normal tracking-wide ${theme.textPrimary} font-light`}
-          >
-            Built for the Modern Pack!
-          </motion.p>
-
-          <Link href="/auth/login">
-            <motion.button
-              initial={{ opacity: 0 }}
-              animate={{
-                opacity: 1,
-                transition: { duration: 1 },
-              }}
-              className={`mt-8 px-12 py-3 rounded-lg text-baserounded-lg font-medium cursor-pointer transition-all ${theme.button.primary}`}
-            >
-              Start Howling
-            </motion.button>
-          </Link>
+          <Hero />
+          <LoginButton />
         </div>
         <div
           className="flex justify-center items-center p-8 relative

@@ -1,7 +1,7 @@
 import { Message } from '@/interfaces/message';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { MessageBubble } from './MessageBubble';
-import { useThemeStore } from '@/store/theme.store';
+import { useThemeStore } from '@/features/theme/theme.store';
 import { PaperClipIcon } from '@heroicons/react/24/solid';
 
 export function ChatWindow() {
@@ -10,22 +10,25 @@ export function ChatWindow() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: 'Hey! Check out this new theme system.',
-      sender: 'other',
+      userId: "xyz",
+      content: 'Hey! Check out this new theme system.',
+      username: 'other',
       timestamp: '10:30 AM',
       status: 'sent',
     },
     {
       id: '2',
-      text: 'Looks amazing! The glassmorphism is perfect.',
-      sender: 'me',
+      userId: "xyz",
+      content: 'Looks amazing! The glassmorphism is perfect.',
+      username: 'me',
       timestamp: '10:32 AM',
       status: 'sent',
     },
     {
       id: '3',
-      text: 'All components adapt to the theme automatically! 🎨',
-      sender: 'other',
+      userId: "xyz",
+      content: 'All components adapt to the theme automatically! 🎨',
+      username: 'other',
       timestamp: '10:33 AM',
       status: 'sent',
     },
@@ -59,8 +62,9 @@ export function ChatWindow() {
 
     const newMessage: Message = {
       id: Date.now().toString(),
-      text: trimmedMessage,
-      sender: 'me',
+      userId: "xyz",
+      content: trimmedMessage,
+      username: 'me',
       timestamp: getTimestamp(),
       status: 'sending',
     };
@@ -82,8 +86,9 @@ export function ChatWindow() {
         setIsTyping(false);
         const responseMessage: Message = {
           id: (Date.now() + 1).toString(),
-          text: "That's a great message! 👍",
-          sender: 'other',
+          userId: "xyz",
+          content: "That's a great message! 👍",
+          username: 'other',
           timestamp: getTimestamp(),
           status: 'sent',
         };
@@ -156,7 +161,7 @@ export function ChatWindow() {
             <MessageBubble
               key={message.id}
               message={message}
-              isOwn={message.sender === 'me'}
+              isOwn={message.userId === 'me'}
             />
           ))}
 

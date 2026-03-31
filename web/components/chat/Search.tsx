@@ -1,6 +1,6 @@
 'use client';
 
-import { useThemeStore } from '@/store/theme.store';
+import { useThemeStore } from '@/features/theme/theme.store';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/solid';
 import { useState } from 'react';
 

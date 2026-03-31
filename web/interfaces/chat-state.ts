@@ -1,4 +1,5 @@
 import { ChatRoom } from './chat-room';
+import { Message } from './message';
 
 export interface ChatState {
   ws: WebSocket | null;

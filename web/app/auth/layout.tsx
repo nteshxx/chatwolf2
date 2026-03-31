@@ -1,7 +1,7 @@
 'use client';
 
-import { useThemeStore } from '@/store/theme.store';
-import Logo from '@/theme/logo';
+import { useThemeStore } from '@/features/theme/theme.store';
+import Logo from '@/components/theme/Logo';
 import Image from 'next/image';
 
 export default function AuthLayout({

@@ -1,9 +1,9 @@
 'use client';
 
-import { useThemeStore } from '@/store/theme.store';
-import { Theme } from '@/types/theme.type';
+import { useThemeStore } from '@/features/theme/theme.store';
+import { Theme } from '@/features/theme/theme.type';
+import { themes } from '@/features/theme/themes';
 import { motion } from 'motion/react';
-import { themes } from './themes';
 
 export default function ThemeToggle() {
   const { themeId, theme, setTheme } = useThemeStore();
@@ -25,10 +25,12 @@ export default function ThemeToggle() {
             key={id}
             onClick={() => setTheme(id)}
             className={`rounded-full px-3 py-1 text-xs capitalize ${
-              themeId === id ? theme.button.primary : theme.button.secondary
+              themeId === id
+                ? theme['--color-button-primary']
+                : theme['--color-button-secondary']
             }`}
           >
-            {themes[id].name}
+            {themes[id]['--name']}
           </button>
         ))}
       </section>

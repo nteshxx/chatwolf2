@@ -1,5 +1,5 @@
 import { Message } from '@/interfaces/message';
-import { useThemeStore } from '@/store/theme.store';
+import { useThemeStore } from '@/features/theme/theme.store';
 
 export function MessageBubble({
   message,
@@ -21,7 +21,7 @@ export function MessageBubble({
           <span
             className={`text-base ${isOwn ? 'text-white' : theme.textPrimary}`}
           >
-            {message.text}
+            {message.content}
           </span>
           <span
             className={`float-right ml-1 mt-2 text-xs ${

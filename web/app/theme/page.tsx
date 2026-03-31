@@ -1,8 +1,8 @@
 'use client';
 
-import { useThemeStore } from '@/store/theme.store';
-import { themes } from '@/theme/themes';
-import { Theme } from '@/types/theme.type';
+import { useThemeStore } from '@/features/theme/theme.store';
+import { themes } from '@/features/theme/themes';
+import { Theme } from '@/features/theme/theme.type';
 
 export default function ThemesPage() {
   const { themeId, theme, setTheme } = useThemeStore();

@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { useAuthStore } from '@/store/auth.store';
 import userImage from '@/public/avatars/male.svg';
 import { ChangeEvent } from 'react';
-import { useThemeStore } from '@/store/theme.store';
+import { useThemeStore } from '@/features/theme/theme.store';
 
 const Profile = () => {
   const { user, token } = useAuthStore();

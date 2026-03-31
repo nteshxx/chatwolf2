@@ -3,7 +3,7 @@
 import { Search } from '@/components/chat/Search';
 import { Chats } from '@/components/chat/Chats';
 import { ChatWindow } from '@/components/chat/ChatWindow';
-import { useThemeStore } from '@/store/theme.store';
+import { useThemeStore } from '@/features/theme/theme.store';
 
 export default function ChatPage() {
   const { theme } = useThemeStore();
